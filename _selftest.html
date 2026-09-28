@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>selftest</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+<header class="topbar" id="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#/"><span class="brand-mark">R6</span><span class="brand-text">HUB</span></a>
+    <nav class="nav" id="nav">
+      <a href="#/" data-nav="/">Inicio</a>
+      <a href="#/agentes" data-nav="agentes">Agentes</a>
+      <a href="#/armas" data-nav="armas">Armas</a>
+      <a href="#/noticias" data-nav="noticias">Noticias</a>
+      <a href="#/rankings" data-nav="rankings">Rankings</a>
+    </nav>
+    <form class="search" id="search" role="search" autocomplete="off">
+      <input type="search" id="search-input" placeholder="Buscar">
+    </form>
+    <button class="burger" id="burger" aria-label="menu"><span></span><span></span><span></span></button>
+  </div>
+  <div class="search-results" id="search-results" hidden></div>
+</header>
+<main id="main" class="wrap"></main>
+<footer class="footer"><div class="wrap footer-inner"><ul id="footer-sources"></ul></div></footer>
+
+<script>
+/* so erros de JS reais entram aqui */
+window.__js = [];
+window.onerror = function (m, s, l, c) { window.__js.push("onerror: " + m + " @ " + s + ":" + l + ":" + c); return false; };
+window.addEventListener("unhandledrejection", function (e) { window.__js.push("promise: " + e.reason); });
+var __ce = console.error;
+console.error = function () { window.__js.push("console.error: " + [].join.call(arguments, " ")); __ce.apply(console, arguments); };
+</script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data/operators.js"></script>
+<script src="assets/js/data/weapons.js"></script>
+<script src="assets/js/data/rankings.js"></script>
+<script src="assets/js/data/patchnotes.js"></script>
+<script src="assets/js/data/news.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+(function () {
+  var D = window.R6HUB, out = [], bad = [];
+  function log(s) { out.push(s); }
+  function fail(s) { bad.push(s); out.push("  FALHA >> " + s); }
+  function main() { return document.getElementById("main"); }
+  function html() { return main().innerHTML; }
+  function has(sel) { return !!document.querySelector("#main " + sel); }
+  function setHash(h, cb) {
+    var done = false;
+    function go() { if (done) return; done = true; cb(); }
+    if (location.hash === h) { setTimeout(go, 30); }
+    else { location.hash = h; setTimeout(go, 60); }
+  }
+
+  /* ---------- 1. integridade dos dados ---------- */
+  if (!D || !D.operators) { fail("R6HUB nao carregou"); dump(); return; }
+  log("[dados] operadores=" + D.operators.length +
+      " atk=" + D.operators.filter(function (o) { return o.side === "ATK"; }).length +
+      " def=" + D.operators.filter(function (o) { return o.side === "DEF"; }).length +
+      " | armas=" + D.weapons.length +
+      " patches=" + D.patchnotes.patches.length +
+      " releases=" + D.patchnotes.operatorReleases.length +
+      " noticias=" + D.news.items.length +
+      " times=" + D.rankings.teams.length + " timesMore=" + D.rankings.teamsMore.length +
+      " solo=" + D.rankings.solo.length);
+  if (D.operators.length !== 78) fail("esperava 78 operadores, veio " + D.operators.length);
+
+  var campos = ["id", "n", "side", "ctu", "reg", "y", "h", "sp", "g", "gt", "gd", "un", "best", "bio"];
+  D.operators.forEach(function (o) {
+    campos.forEach(function (c) { if (o[c] === undefined || o[c] === null || o[c] === "") fail("operador " + o.id + " sem campo " + c); });
+    if (!Array.isArray(o.r) || !o.r.length) fail(o.id + ".r invalido");
+    if (!Array.isArray(o.sec)) fail(o.id + ".sec invalido");
+    var pool = D.gadgetPool[o.side].map(function (g) { return g.n; });
+    o.sec.forEach(function (s) { if (pool.indexOf(s) === -1) fail("gadget secundario desconhecido: " + s + " (" + o.id + ")"); });
+    o.p.concat(o.s).forEach(function (wn) { if (!D.weaponIndex[wn.toLowerCase()]) fail("arma fora do catalogo: " + wn + " (" + o.id + ")"); });
+  });
+  var seen = {};
+  D.operators.forEach(function (o) { if (seen[o.id]) fail("id duplicado: " + o.id); seen[o.id] = 1; });
+  var wseen = {};
+  D.weapons.forEach(function (w) { if (wseen[w.n]) fail("arma duplicada: " + w.n); wseen[w.n] = 1; });
+  if (!bad.length) log("[dados] integridade OK (campos, gadgets, referencias de armas, sem duplicados)");
+
+  /* ---------- 2. render de cada rota ---------- */
+  var routes = [
+    ["#/", ".hero", 5000],
+    ["#/agentes", ".grid-ops .card", 20000],
+    ["#/agentes?side=ATK", ".grid-ops", 20000],
+    ["#/agentes?side=DEF&speed=1&health=125", ".grid-ops", 2000],
+    ["#/agentes?role=intel", ".grid-ops", 5000],
+    ["#/agentes?ctu=Nighthaven", ".grid-ops", 1000],
+    ["#/agentes?q=smoke", ".grid-ops", 500],
+    ["#/agentes?q=zzzznada", ".empty-state", 50],
+    ["#/agente/ash", ".gadget-box", 3000],
+    ["#/agente/ra%5Bu%5Dora", ".detail-hero", 2000],
+    ["#/agente/noor", ".wrow", 1000],
+    ["#/agente/solid-snake", ".sec-list", 1000],
+    ["#/agente/inexistente", ".empty-state", 50],
+    ["#/armas", ".grid-weapons .card", 30000],
+    ["#/armas?type=LMG", ".grid-weapons", 3000],
+    ["#/armas?q=m4", ".grid-weapons", 1000],
+    ["#/arma/M249%20SAW", ".detail-hero", 1000],
+    ["#/arma/SMG-11", ".detail-hero", 1000],
+    ["#/arma/arma-que-nao-existe", ".empty-state", 50],
+    ["#/noticias", ".news-list .news-card", 10000],
+    ["#/noticias?cat=esports", ".news-card", 1000],
+    ["#/noticias?cat=zzz", ".empty-state", 50],
+    ["#/noticias?tab=balanceamentos", ".patch", 8000],
+    ["#/rankings", ".team-cell", 10000],
+    ["#/rankings?tab=solo", ".mmr-na", 3000],
+    ["#/rota-inexistente", ".empty-state", 50]
+  ];
+  var i = 0, jsBefore = 0;
+
+  function scan(route) {
+    var h = location.hash, min = route[2], sel = route[1];
+    log("[rota] " + h + " -> " + html().length + " chars, seletor " + sel +
+        (has(sel) ? " OK" : " AUSENTE"));
+    if (html().length < min) fail(h + ": #main curto demais (" + html().length + " < " + min + ")");
+    if (!has(sel)) fail(h + ": seletor ausente " + sel);
+    var m = html().match(/.{0,50}undefined.{0,30}/);
+    if (m) fail(h + ": 'undefined' no HTML -> ..." + m[0].replace(/\s+/g, " "));
+    if (/\bNaN\b/.test(html())) fail(h + ": 'NaN' no HTML");
+    if (/\[object Object\]/.test(html())) fail(h + ": '[object Object]' no HTML");
+    if (/class="[a-z-]* ""/.test(html())) fail(h + ": atributo class com valor vazio");
+    if (window.__js.length > jsBefore) fail(h + ": erro de JS no render -> " + window.__js.slice(jsBefore).join(" | "));
+    jsBefore = window.__js.length;
+  }
+
+  function step() {
+    if (i >= routes.length) return interactions();
+    var r = routes[i++];
+    setHash(r[0], function () { scan(r); step(); });
+  }
+
+  /* ---------- 3. interacoes ---------- */
+  function interactions() {
+    log("[interacoes] iniciando");
+    setHash("#/noticias?tab=balanceamentos", function () {
+      var ps = document.querySelectorAll(".patch");
+      if (ps.length < 20) fail("esperava 24 patches, veio " + ps.length);
+      var heads = document.querySelectorAll("[data-ptoggle]");
+      heads[0].click();
+      if (!ps[0].classList.contains("open")) fail("acordeao de patch nao abriu");
+      var semTabela = [];
+      for (var q = 0; q < ps.length; q++) {
+        ps[q].classList.add("open");
+        var temTabela = !!ps[q].querySelector(".tbl-scroll table");
+        var temNota = !!ps[q].querySelector(".patch-body > p.small.muted");
+        if (!temTabela && !temNota) semTabela.push(ps[q].querySelector(".patch-ver").textContent);
+      }
+      if (semTabela.length) fail("patches sem tabela nem aviso: " + semTabela.join(", "));
+      else log("[info] patches ok: " + D.patchnotes.patches.filter(function (x) { return (x.balance || []).length; }).length +
+        " com tabela, " + D.patchnotes.patches.filter(function (x) { return !(x.balance || []).length; }).length + " sem mudancas");
+      var b0 = ps[0].querySelector(".patch-ver").textContent;
+      log("[info] patch " + b0 + " tem " + ps[0].querySelectorAll("tbody tr").length + " linhas de balanceamento e " +
+          ps[0].querySelectorAll("h4").length + " secoes");
+      var ex = document.getElementById("expand-all");
+      for (var q2 = 0; q2 < ps.length; q2++) ps[q2].classList.remove("open");
+      ex.click();
+      if (ex.textContent !== "Recolher tudo") fail("expandir tudo nao virou 'Recolher tudo' (" + ex.textContent + ")");
+      if (!ps[0].classList.contains("open")) fail("expandir tudo nao abriu o patch 0");
+      ex.click();
+      if (ex.textContent !== "Expandir tudo") fail("recolher tudo nao voltou (" + ex.textContent + ")");
+      if (ps[0].classList.contains("open")) fail("recolher tudo nao fechou o patch 0");
+      log("[interacoes] patches: " + ps.length + ", expandir/recolher tudo ok");
+      next();
+    });
+  }
+
+  function next() {
+    setHash("#/noticias", function () {
+      var t = document.querySelectorAll(".tab");
+      if (t.length !== 2) fail("esperava 2 abas em noticias, veio " + t.length);
+      t[1].click();
+      setTimeout(function () {
+        if (location.hash.indexOf("tab=balanceamentos") === -1) fail("aba nao mudou o hash (" + location.hash + ")");
+        if (!has(".patch")) fail("aba de balanceamento nao renderizou .patch");
+        t = document.querySelectorAll(".tab");
+        t[0].click();
+        setTimeout(function () {
+          if (!has(".news-list")) fail("aba de noticias nao voltou");
+          agentStep();
+        }, 80);
+      }, 80);
+    });
+  }
+
+  function agentStep() {
+    setHash("#/agente/ash", function () {
+      var rows = document.querySelectorAll("[data-wtoggle]");
+      if (!rows.length) fail("agente sem acordeoes de arma");
+      rows[0].click();
+      if (!rows[0].parentNode.classList.contains("open")) fail("acordeao de arma nao abriu");
+      var bars = rows[0].parentNode.querySelectorAll(".bar");
+      if (!bars.length) fail("arma sem barras de percentual");
+      log("[interacoes] accordao de arma ok, " + bars.length + " barras de peca");
+      if (!has(".sec-list li")) fail("agente sem lista de gadgets secundarios");
+      var chips = document.querySelectorAll(".g-ico");
+      log("[interacoes] itens de lista com icone: " + chips.length +
+          " | slots de peca: " + document.querySelectorAll(".slot-block").length);
+      if (!chips.length) fail("nenhum icone de lista renderizado no agente");
+      rankStep();
+    });
+  }
+
+  function rankStep() {
+    setHash("#/rankings?tab=solo", function () {
+      var trs = document.querySelectorAll("tbody tr");
+      if (trs.length !== D.rankings.solo.length) fail("aba solo: " + trs.length + " linhas vs " + D.rankings.solo.length + " jogadores");
+      if (!document.querySelector(".expand-note")) fail("aba solo sem nota de API");
+      var t = document.querySelectorAll(".tab");
+      t[0].click();
+      setTimeout(function () {
+        if (!document.querySelector(".team-cell")) fail("aba times nao renderizou");
+        log("[interacoes] abas de ranking ok");
+        searchStep();
+      }, 80);
+    });
+  }
+
+  function searchStep() {
+    var si = document.getElementById("search-input");
+    var box = document.getElementById("search-results");
+    si.focus();
+    si.value = "ash";
+    si.dispatchEvent(new Event("input", { bubbles: true }));
+    setTimeout(function () {
+      log("[busca] hidden=" + box.hidden + " itens=" + box.querySelectorAll(".sr-item").length);
+      if (box.hidden) fail("busca global: caixa continua oculta");
+      if (box.innerHTML.indexOf("Ash") === -1) fail("busca global nao achou 'ash'");
+      si.value = "m4";
+      si.dispatchEvent(new Event("input", { bubbles: true }));
+      setTimeout(function () {
+        log("[busca] m4 -> itens=" + box.querySelectorAll(".sr-item").length);
+        if (!box.querySelector(".sr-item")) fail("busca global nao achou 'm4'");
+        si.value = "zzzqqq";
+        si.dispatchEvent(new Event("input", { bubbles: true }));
+        setTimeout(function () {
+          if (!box.querySelector(".sr-empty")) fail("busca global sem estado vazio");
+          si.value = "";
+          si.dispatchEvent(new Event("input", { bubbles: true }));
+          filterStep();
+        }, 220);
+      }, 220);
+    }, 220);
+  }
+
+  /* ---------- 4. filtros ---------- */
+  function filterStep() {
+    setHash("#/agentes", function () {
+      var n0 = document.querySelectorAll(".grid-ops .card").length;
+      var sel = document.getElementById("f-side");
+      sel.value = "ATK";
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+      setTimeout(function () {
+        var n1 = document.querySelectorAll(".grid-ops .card").length;
+        log("[filtros] todos=" + n0 + " so ATK=" + n1);
+        if (n0 !== 78) fail("grade de agentes nao mostrou 78 cards (mostrou " + n0 + ")");
+        if (n1 !== 39) fail("filtro de lado nao trouxe 39 atacantes (trouxe " + n1 + ")");
+        var inp = document.getElementById("f-q");
+        inp.focus();
+        inp.value = "ram";
+        inp.dispatchEvent(new Event("input", { bubbles: true }));
+        setTimeout(function () {
+          var n2 = document.querySelectorAll(".grid-ops .card").length;
+          var focado = document.getElementById("f-q");
+          log("[filtros] ATK + 'ram' = " + n2 + " (hash " + location.hash + ") ativo=" +
+              (document.activeElement ? document.activeElement.id : "?") + " cursor=" +
+              (focado && focado.selectionStart));
+          if (n2 === 0) fail("filtro combinado ATK+ram nao devolveu nada");
+          if (!focado) fail("campo f-q sumiu apos filtrar");
+          else {
+            if (document.activeElement !== focado) fail("foco perdido no campo de busca de filtro");
+            if (focado.value !== "ram") fail("valor do filtro perdido: '" + focado.value + "'");
+          }
+          setHash("#/armas", function () {
+            var s = document.getElementById("w-type");
+            s.value = "SNIPER";
+            s.dispatchEvent(new Event("change", { bubbles: true }));
+            setTimeout(function () {
+              var n3 = document.querySelectorAll(".grid-weapons .card").length;
+              log("[filtros] armas SNIPER = " + n3);
+              if (n3 === 0 || n3 > 10) fail("filtro de tipo de arma suspeito: " + n3);
+              navStep();
+            }, 120);
+          });
+        }, 500);
+      }, 120);
+    });
+  }
+
+  function navStep() {
+    var ativos = [], inativos = [];
+    document.querySelectorAll("#nav a").forEach(function (a) {
+      (a.classList.contains("active") ? ativos : inativos).push(a.getAttribute("data-nav"));
+    });
+    if (ativos.length !== 1) fail("esperava 1 aba ativa em #/armas?type=SNIPER, veio " + JSON.stringify(ativos));
+    else if (ativos[0] !== "armas") fail("aba ativa errada: " + ativos[0]);
+    else log("[nav] aba ativa corretamente: " + ativos[0] + " (inativas: " + inativos.join(",") + ")");
+    if (!document.querySelectorAll("#footer-sources a").length) fail("footer sem links de fonte");
+    dump();
+  }
+
+  function dump() {
+    var p = document.createElement("pre");
+    p.id = "selftest-output";
+    p.textContent =
+      "JS-ERROS(" + window.__js.length + "):\n" + (window.__js.join("\n") || "(nenhum)") +
+      "\n\nFALHAS(" + bad.length + "):\n" + (bad.join("\n") || "(nenhuma)") +
+      "\n\nLOG:\n" + out.join("\n");
+    document.body.appendChild(p);
+    document.title = bad.length || window.__js.length ? "SELFTEST-FALHOU" : "SELFTEST-OK";
+  }
+
+  setTimeout(function () { step(); }, 120);
+})();
+</script>
+</body>
+</html>

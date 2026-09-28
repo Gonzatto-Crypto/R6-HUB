@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R6 HUB — Hub de Rainbow Six Siege</title>
+<meta name="description" content="Hub de Rainbow Six Siege: os 78 operadores com gadget principal, gadgets secundarios, habilidade unica e armas; percentual de uso das pecas; noticias, balanceamentos e rankings.">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<a class="skip" href="#main">Pular para o conteudo</a>
+
+<header class="topbar" id="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#/" aria-label="R6 HUB - pagina inicial">
+      <span class="brand-mark" aria-hidden="true">R6</span>
+      <span class="brand-text">HUB<em>Rainbow Six Siege</em></span>
+    </a>
+
+    <nav class="nav" id="nav" aria-label="Navegacao principal">
+      <a href="#/"          data-nav="/">Inicio</a>
+      <a href="#/agentes"   data-nav="agentes">Agentes</a>
+      <a href="#/armas"     data-nav="armas">Armas</a>
+      <a href="#/noticias"  data-nav="noticias">Noticias &amp; Balanceamento</a>
+      <a href="#/rankings"  data-nav="rankings">Rankings</a>
+    </nav>
+
+    <form class="search" id="search" role="search" autocomplete="off">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M11 18a7 7 0 110-14 7 7 0 010 14z"/></svg>
+      <input type="search" id="search-input" placeholder="Buscar operador ou arma..." aria-label="Buscar operador ou arma">
+    </form>
+
+    <button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
+
+  <div class="search-results" id="search-results" hidden></div>
+</header>
+
+<main id="main" class="wrap"></main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-col">
+      <h4>R6 HUB</h4>
+      <p>Hub de comunidade sobre Tom Clancy's Rainbow Six Siege. Projeto nao oficial, sem vinculo com a Ubisoft.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Fontes dos dados</h4>
+      <ul id="footer-sources"></ul>
+    </div>
+    <div class="footer-col">
+      <h4>Avisos</h4>
+      <ul>
+        <li>A Ubisoft nao publica percentual de uso de pecas (attachments). Todos os percentuais de pecas deste site sao <strong>estimativas de consenso da comunidade</strong>.</li>
+        <li>O Ranked 3.0 removeu o MMR oculto: nao existe leaderboard publico de MMR nem de ranking de times dentro do jogo.</li>
+        <li>Stats de armas e balanceamentos vem das patch notes oficiais e de datasets cross-checkados.</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data/operators.js"></script>
+<script src="assets/js/data/weapons.js"></script>
+<script src="assets/js/data/rankings.js"></script>
+<script src="assets/js/data/patchnotes.js"></script>
+<script src="assets/js/data/news.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

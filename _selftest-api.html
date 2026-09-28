@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>selftest api</title><link rel="stylesheet" href="assets/css/styles.css"></head>
+<body>
+<header class="topbar"><div class="wrap topbar-inner">
+  <a class="brand" href="#/"><span class="brand-mark">R6</span><span class="brand-text">HUB</span></a>
+  <nav class="nav" id="nav">
+    <a href="#/" data-nav="/">Inicio</a><a href="#/agentes" data-nav="agentes">Agentes</a>
+    <a href="#/armas" data-nav="armas">Armas</a><a href="#/noticias" data-nav="noticias">Noticias</a>
+    <a href="#/rankings" data-nav="rankings">Rankings</a>
+  </nav>
+  <form class="search" id="search"><input type="search" id="search-input"></form>
+  <button class="burger" id="burger"><span></span><span></span><span></span></button>
+</div><div class="search-results" id="search-results" hidden></div></header>
+<main id="main" class="wrap"></main>
+<footer class="footer"><div class="wrap footer-inner"><ul id="footer-sources"></ul></div></footer>
+
+<script>
+window.__js = [];
+window.onerror = function (m, s, l, c) { window.__js.push("onerror: " + m + " @ " + s + ":" + l); return false; };
+var __ce = console.error;
+console.error = function () { window.__js.push("console.error: " + [].join.call(arguments, " ")); __ce.apply(console, arguments); };
+window.__liveJson = {
+  teams: [
+    { pos: 1, name: "TIME AO VIVO A", region: "Brasil", team: "aa, bb", coach: "-", titles: ["Title X"], rolling: 1, rollingPts: 999, si: 2000 },
+    { pos: 2, name: "TIME AO VIVO B", region: "Europa", team: "cc", coach: "-", titles: [], rolling: 2, rollingPts: 500, si: 1900 }
+  ],
+  solo: [{ pos: 1, tag: "live1", real: "Jogador Live", country: "Brasil", team: "FaZe Clan", note: "dado de API" }]
+};
+</script>
+<script src="assets/js/config.js"></script>
+<script>
+  /* modo=ok usa um endpoint data: valido; modo=bad usa uma URL que falha */
+  var bad = /[?&]modo=bad/.test(location.search);
+  window.__modo = bad ? "bad" : "ok";
+  window.R6HUB_CONFIG.rankingApiUrl = bad
+    ? "https://127.0.0.1:1/nao-existe.json"
+    : "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.__liveJson));
+</script>
+<script src="assets/js/data/operators.js"></script>
+<script src="assets/js/data/weapons.js"></script>
+<script src="assets/js/data/rankings.js"></script>
+<script src="assets/js/data/patchnotes.js"></script>
+<script src="assets/js/data/news.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+(function () {
+  var out = [], bad2 = [];
+  function log(s) { out.push(s); }
+  function fail(s) { bad2.push(s); out.push("  FALHA >> " + s); }
+  function txt() { return document.getElementById("main").textContent; }
+
+  setTimeout(function () {
+    location.hash = "#/rankings";
+    setTimeout(function () {
+      log("[modo=" + window.__modo + "] hash=" + location.hash);
+      var badge = document.querySelector("#main .badge.gold");
+      var t1 = txt();
+      if (window.__modo === "ok") {
+        if (t1.indexOf("TIME AO VIVO A") === -1) fail("dados da API nao apareceram");
+        else log("[ok] times vieram da API");
+        if (t1.indexOf("DarkZero") !== -1) fail("snapshot local nao foi substituido");
+        else log("[ok] snapshot local substituido");
+        if (!badge || badge.textContent.indexOf("API ao vivo") === -1) fail("badge nao indica API ao vivo");
+        var rows = document.querySelectorAll("#main table")[0].querySelectorAll("tbody tr");
+        if (rows.length !== 2) fail("esperava 2 linhas da API, veio " + rows.length);
+        else log("[ok] tabela de times com " + rows.length + " linhas");
+        var ts = document.querySelectorAll("#main .tab")[1];
+        ts.click();
+        setTimeout(function () {
+          if (txt().indexOf("live1") === -1) fail("aba solo nao usou os dados da API");
+          else log("[ok] aba solo usou os dados da API (live1)");
+          finish();
+        }, 250);
+      } else {
+        if (t1.indexOf("DarkZero") === -1) fail("modo bad: caiu do snapshot local");
+        else log("[bad] snapshot local preservado (DarkZero presente)");
+        if (t1.indexOf("TIME AO VIVO A") !== -1) fail("modo bad: dado inexistente apareceu");
+        if (badge) fail("modo bad: exibiu badge de API ao vivo");
+        else log("[bad] sem badge de API ao vivo");
+        var ts = document.querySelectorAll("#main .tab")[1];
+        ts.click();
+        setTimeout(function () {
+          var note = document.querySelector("#main .expand-note");
+          if (!note) fail("modo bad: sem .expand-note na aba solo");
+          else if (note.textContent.indexOf("API indisponivel") === -1) fail("modo bad: aviso de API indisponivel ausente -> " + note.textContent.slice(0, 160));
+          else log("[bad] aviso de fallback exibido");
+          if (txt().indexOf("cyber") === -1) fail("modo bad: aba solo sem dados locais");
+          else log("[bad] aba solo caiu no snapshot local (cyber presente)");
+          if (document.querySelector("#main").innerHTML.indexOf("undefined") !== -1) fail("modo bad: undefined no HTML");
+          finish();
+        }, 250);
+      }
+    }, window.__modo === "ok" ? 800 : 1500);
+  }, 200);
+
+  function finish() {
+    if (window.__js.length) fail("erro de JS: " + window.__js.join(" | "));
+    else log("nenhum erro de JS");
+    var p = document.createElement("pre");
+    p.id = "selftest-output";
+    p.textContent = "JS-ERROS(" + window.__js.length + "):\n" + (window.__js.join("\n") || "(nenhum)") +
+      "\n\nFALHAS(" + bad2.length + "):\n" + (bad2.join("\n") || "(nenhuma)") + "\n\nLOG:\n" + out.join("\n");
+    document.body.appendChild(p);
+  }
+})();
+</script>
+</body>
+</html>
