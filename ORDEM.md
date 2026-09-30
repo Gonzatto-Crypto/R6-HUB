@@ -15,19 +15,19 @@ Todos os caminhos são relativos à raiz do projeto (`R6 HUB`).
 
 | # | Arquivo | Papel | Tamanho |
 | --- | --- | --- | --- |
-| 1 | `README.md` | Documentação: rotas, dados, testes, avisos | 14 KB |
+| 1 | `README.md` | Documentação curta: o que é o site, como abrir, como testar | 4 KB |
 | 2 | `index.html` | Página única. Define header, busca, nav, footer e a **ordem dos scripts** | 3 KB |
 | 3 | `assets/js/config.js` | Configuração: snapshot, fontes, API de rankings | 1 KB |
-| 4 | `assets/js/data/operators.js` | 78 operadores, 14 funções, pool de gadgets | 49 KB |
-| 5 | `assets/js/data/weapons.js` | 116 armas, efeitos de peça, meta, índices | 30 KB |
-| 6 | `assets/js/data/rankings.js` | Times, lista complementar, solo, disclaimers | 12 KB |
+| 4 | `assets/js/data/operators.js` | 78 operadores, 14 funções, pool de gadgets | 58 KB |
+| 5 | `assets/js/data/weapons.js` | 116 armas, efeitos de peça, meta, índices | 34 KB |
+| 6 | `assets/js/data/rankings.js` | Times, lista complementar, solo, disclaimers | 13 KB |
 | 7 | `assets/js/data/patchnotes.js` | **Gerado.** Histórico de balanceamento | 86 KB |
 | 8 | `assets/js/data/news.js` | **Gerado.** Notícias | 11 KB |
-| 9 | `assets/js/app.js` | Roteador, todas as telas, busca, interações | 49 KB |
+| 9 | `assets/js/app.js` | Roteador, todas as telas, busca, interações | 64 KB |
 | 10 | `assets/css/styles.css` | Tema, componentes, responsivo | 28 KB |
 | 11 | `tools/build-data.ps1` | Regenera os dois arquivos marcados como gerados | 2 KB |
-| 12 | `_selftest.html` | Autoteste principal: dados, rotas, interações | 15 KB |
-| 13 | `_selftest-api.html` | Autoteste da API de rankings (sucesso e falha) | 5 KB |
+| 12 | `_selftest.html` | Autoteste principal: dados, rotas, interações | 16 KB |
+| 13 | `_selftest-api.html` | Autoteste da API de rankings (sucesso e falha) | 6 KB |
 
 `app.js` e `styles.css` são os dois arquivos grandes de verdade. Todo o resto é dado ou configuração.
 
@@ -121,7 +121,7 @@ Com o arquivo `index.html` aberto, `Ctrl+Shift+P` → **Tasks: Run Task** não e
 - `Ctrl+Shift+P` → **Simple Browser: Show** → cole `file:///C:/Users/User/OneDrive/%C3%81rea%20de%20Trabalho/R6%20HUB/index.html`
 - ou clique com o botão direito no `index.html` na barra lateral → **Open in Simple Browser** (se a extensão estiver instalada).
 
-Só funciona se você extensão **Simple Browser** estiver instalada. Se não, abra o `index.html` no Edge — o site não precisa de servidor.
+Só funciona se a extensão **Simple Browser** estiver instalada. Se não, abra o `index.html` no Edge — o site não precisa de servidor.
 
 ---
 
