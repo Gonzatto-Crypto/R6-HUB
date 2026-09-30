@@ -1,59 +1,105 @@
-/* =========================================================
-   R6 HUB - aplicacao (vanilla JS, sem build)
-   Rotas por hash:
-     #/                    home
-     #/agentes?...         lista de operadores com filtros
-     #/agente/<id>         detalhe do operador
-     #/armas?...           catalogo de armas
-     #/arma/<nome>         detalhe da arma
-     #/noticias            noticias + balanceamentos (abas)
-     #/rankings            rankings de times e solo (abas)
-   ========================================================= */
+/* =================================================================
+   R6 HUB - o site em si
+   -----------------------------------------------------------------
+   Este arquivo faz tres coisas, nessa ordem:
+
+     1. Lê a URL (o "#/..." depois do nome do site) e decide qual
+        página mostrar.
+     2. Monta o HTML de cada página.
+     3. Liga os botões, filtros e campos de busca.
+
+   Como testar uma mudanca aqui:
+     abra o arquivo _selftest.html no navegador. Ele passa por todas
+     as páginas e avisa se algo quebrou.
+
+   Organizacao do arquivo:
+     Parte 1 - Funcoes curtas de ajuda (escapar texto, formatar data...)
+     Parte 2 - Leitura da URL
+     Parte 3 - Blocos de tela reaproveitados
+     Parte 4 - Uma funcao por pagina
+     Parte 5 - Busca no topo da pagina
+     Parte 6 - Ligar os botoes
+     Parte 7 - Inicializacao
+   ================================================================= */
 (function () {
   "use strict";
 
-  var D = window.R6HUB;
-  var CFG = window.R6HUB_CONFIG;
-  var main = document.getElementById("main");
+  var DADOS = window.R6HUB;                 // Todos os dados do site
+  var CONFIG = window.R6HUB_CONFIG;        // Configuracoes (config.js)
+  var AREA_PRINCIPAL = document.getElementById("main");
 
-  /* ------------------------------------------------ helpers */
-  function $(sel, root) { return (root || document).querySelector(sel); }
-  function esc(s) {
-    return String(s == null ? "" : s)
+  /* =================================================================
+     PARTE 1 - FUNCOES CURTAS DE AJUDA
+     ================================================================= */
+
+  /* Acha um elemento pelo id. Ex: pegarElemento("search-input") */
+  function pegarElemento(id) { return document.getElementById(id); }
+
+  /* Protege o texto antes de colocar dentro do HTML.
+     Sem isso, um "<" no nome de um Operador quebraria a pagina. */
+  function escapar(texto) {
+    return String(texto == null ? "" : texto)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
-  function norm(s) {
-    return String(s == null ? "" : s).toLowerCase()
+
+  /* Deixa o texto comparável: tira acento e joga para minúsculas.
+     Assim "Coração" e "coracao" contam como a mesma busca. */
+  function normalizar(texto) {
+    return String(texto == null ? "" : texto).toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   }
-  function initials(name) {
-    var parts = String(name).replace(/[^A-Za-z0-9\u00C0-\u024F ]/g, " ").trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+
+  /* Pega as iniciais para usar no quadradinho do avatar.
+     "DarkZero" vira "DZ", "Team Falcons" vira "TF". */
+  function iniciais(nome) {
+    var partes = String(nome).replace(/[^A-Za-z0-9\u00C0-\u024F ]/g, " ").trim().split(/\s+/);
+    if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+    return (partes[0][0] + partes[1][0]).toUpperCase();
   }
-  var MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-  function fmtDate(iso) {
-    if (!iso) return "-";
-    var d = String(iso).slice(0, 10).split("-");
-    if (d.length !== 3) return iso;
-    return Number(d[2]) + " " + MESES[Number(d[1]) - 1] + " " + d[0];
+
+  var NOMES_DOS_MESES = ["jan", "fev", "mar", "abr", "mai", "jun",
+                         "jul", "ago", "set", "out", "nov", "dez"];
+
+  /* "2026-09-22" vira "22 set 2026" */
+  function formatarData(dataISO) {
+    if (!dataISO) return "-";
+    var partes = String(dataISO).slice(0, 10).split("-");
+    if (partes.length !== 3) return dataISO;
+    return Number(partes[2]) + " " + NOMES_DOS_MESES[Number(partes[1]) - 1] + " " + partes[0];
   }
-  function dots(n, cls) {
-    var h = '<span class="dots ' + (cls || "") + '">';
-    for (var i = 1; i <= 3; i++) h += "<b" + (i <= n ? ' class="on"' : "") + "></b>";
-    return h + "</span>";
+
+  /* Desenha as bolinhas de 1 a 3 (usadas para vida e velocidade). */
+  function bolinhas(quantidade, classe) {
+    var html = '<span class="dots ' + (classe || "") + '">';
+    for (var i = 1; i <= 3; i++) {
+      html += "<b" + (i <= quantidade ? ' class="on"' : "") + "></b>";
+    }
+    return html + "</span>";
   }
-  function enc(v) { return encodeURIComponent(String(v)); }
-  function sideLabel(s) { return s === "ATK" ? "Atacante" : "Defensor"; }
-  function sideShort(s) { return s === "ATK" ? "ATK" : "DEF"; }
-  function opById(id) {
-    return D.operators.filter(function (o) { return o.id === id; })[0] || null;
+
+  /* Prepara um texto para entrar dentro de um link (#/agente/...) */
+  function codificarParaLink(valor) { return encodeURIComponent(String(valor)); }
+
+  function nomeDoLado(lado) { return lado === "ATK" ? "Atacante" : "Defensor"; }
+  function siglaDoLado(lado) { return lado === "ATK" ? "ATK" : "DEF"; }
+
+  /* Procura um Operador pelo id. Devolve null se nao achar. */
+  function acharOperador(id) {
+    var achado = DADOS.operators.filter(function (operador) { return operador.id === id; });
+    return achado[0] || null;
   }
-  function wByName(n) {
-    return D.weaponIndex[String(n || "").toLowerCase()] || D.weaponIndex[norm(n)] || null;
+
+  /* Procura uma arma pelo nome, sem se preocupar com maiuscula. */
+  function acharArma(nome) {
+    return DADOS.weaponIndex[String(nome || "").toLowerCase()] ||
+           DADOS.weaponIndex[normalizar(nome)] ||
+           null;
   }
-  var CAT_PT = {
+
+  /* Traduz os termos que chegam em ingles do arquivo de dados
+     para o portugues que aparece na tela. */
+  var TRADUCAO_CATEGORIA = {
     "esports": "Esports",
     "season-launch": "Inicio de temporada",
     "in-game-event": "Evento in-game",
@@ -61,785 +107,1063 @@
     "announcement": "Anuncio",
     "community": "Comunidade"
   };
-  var STATUS_PT = {
+  var TRADUCAO_STATUS = {
     "live": "ao vivo",
     "announcement": "anuncio",
     "preseason": "pre-temporada",
     "result": "resultado"
   };
-  function catLabel(c) { return CAT_PT[c] || c; }
-  function statusLabel(s) { return STATUS_PT[s] || s; }
-  function roleLabel(id) {
-    var r = D.roles.filter(function (x) { return x.id === id; })[0];
-    return r ? r.label : id;
-  }
-  function slotLabel(s) {
-    return { mira: "Mira / Luneta", under: "Sousbarrel", grip: "Grip", cano: "Cano / Boca" }[s] || s;
-  }
-  function confTag(c) {
-    var lbl = { alta: "confianca alta", media: "confianca media", baixa: "confianca baixa" }[c] || c;
-    return '<span class="conf ' + (c || "") + '">' + esc(lbl) + "</span>";
-  }
-  function directionPill(d) {
-    return '<span class="pill ' + (d || "mixed") + '">' +
-      (d === "buff" ? "Buff" : d === "nerf" ? "Nerf" : "Misto") + "</span>";
+  var TRADUCAO_SLOT = {
+    mira: "Mira / Luneta",
+    under: "Sousbarrel",
+    grip: "Grip",
+    cano: "Cano / Boca"
+  };
+  var TRADUCAO_CONFIANCA = { alta: "confianca alta", media: "confianca media", baixa: "confianca baixa" };
+
+  function nomeDaCategoria(chave) { return TRADUCAO_CATEGORIA[chave] || chave; }
+  function nomeDoStatus(chave) { return TRADUCAO_STATUS[chave] || chave; }
+  function nomeDoSlot(chave) { return TRADUCAO_SLOT[chave] || chave; }
+
+  /* Acha o nome bonito da funcao de um Operador (ex: "roamer" -> "Roamer"). */
+  function nomeDaFuncao(idFuncao) {
+    var achada = DADOS.roles.filter(function (funcao) { return funcao.id === idFuncao; });
+    return achada[0] ? achada[0].label : idFuncao;
   }
 
-  /* ------------------------------------------------ query string */
-  function parseHash() {
-    var h = location.hash.replace(/^#/, "") || "/";
-    var qIdx = h.indexOf("?");
-    var path = qIdx === -1 ? h : h.slice(0, qIdx);
-    var query = {};
-    if (qIdx !== -1) {
-      h.slice(qIdx + 1).split("&").forEach(function (kv) {
-        if (!kv) return;
-        var p = kv.split("=");
-        query[decodeURIComponent(p[0])] = decodeURIComponent((p[1] || "").replace(/\+/g, " "));
+  /* Etiqueta colorida de confianca da estimativa de peca. */
+  function etiquetaConfianca(confianca) {
+    var texto = TRADUCAO_CONFIANCA[confianca] || confianca;
+    return '<span class="conf ' + (confianca || "") + '">' + escapar(texto) + "</span>";
+  }
+
+  /* Etiqueta colorida que diz se a mudanca foi buff, nerf ou mista. */
+  function etiquetaDirecao(direcao) {
+    var texto = direcao === "buff" ? "Buff" : direcao === "nerf" ? "Nerf" : "Misto";
+    return '<span class="pill ' + (direcao || "mixed") + '">' + texto + "</span>";
+  }
+
+  /* =================================================================
+     PARTE 2 - LEITURA DA URL
+     -----------------------------------------------------------------
+     O endereco do site guarda o que esta aberto. Exemplos:
+       #/                          pagina inicial
+       #/agentes?side=ATK         lista de Operadores, so os atacantes
+       #/agente/ash               detalhe do Ash
+       #/arma/M249%20SAW          detalhe da M249
+     ----------------------------------------------------------------- */
+
+  /* Separa o "#/algo?filtro=x" em: caminho, filtros e pedacos do caminho. */
+  function lerUrl() {
+    var endereco = location.hash.replace(/^#/, "") || "/";
+    var posicaoDoInterrogacao = endereco.indexOf("?");
+    var caminho = posicaoDoInterrogacao === -1 ? endereco : endereco.slice(0, posicaoDoInterrogacao);
+    var filtros = {};
+
+    if (posicaoDoInterrogacao !== -1) {
+      endereco.slice(posicaoDoInterrogacao + 1).split("&").forEach(function (par) {
+        if (!par) return;
+        var pedaco = par.split("=");
+        filtros[decodeURIComponent(pedaco[0])] =
+          decodeURIComponent((pedaco[1] || "").replace(/\+/g, " "));
       });
     }
-    return { path: path, query: query, parts: path.split("/").filter(Boolean) };
-  }
-  function go(path, query) {
-    var qs = "";
-    if (query) {
-      var arr = Object.keys(query).filter(function (k) { return query[k]; })
-        .map(function (k) { return encodeURIComponent(k) + "=" + encodeURIComponent(query[k]); });
-      if (arr.length) qs = "?" + arr.join("&");
-    }
-    location.hash = "#" + path + qs;
-  }
-  function currentQuery() { return parseHash().query; }
-  function setQuery(patch) {
-    var q = currentQuery();
-    Object.keys(patch).forEach(function (k) {
-      if (patch[k] == null || patch[k] === "") delete q[k];
-      else q[k] = patch[k];
-    });
-    go(parseHash().path, q);
+
+    return {
+      caminho: caminho,
+      filtros: filtros,
+      pedacos: caminho.split("/").filter(Boolean)
+    };
   }
 
-  /* ------------------------------------------------ fragmentos */
-  function secHead(kicker, title, desc, extra) {
-    return '<div class="sec-head"><div><span class="kicker">' + esc(kicker) + "</span><h2>" +
-      esc(title) + "</h2>" + (desc ? "<p>" + esc(desc) + "</p>" : "") + "</div>" +
-      '<div class="spacer"></div>' + (extra || "") + "</div>";
+  /* Troca de pagina. Monta o "#/caminho?filtros" e joga no endereco. */
+  function irPara(caminho, filtros) {
+    var partes = [];
+    if (filtros) {
+      Object.keys(filtros).forEach(function (chave) {
+        if (filtros[chave]) {
+          partes.push(encodeURIComponent(chave) + "=" + encodeURIComponent(filtros[chave]));
+        }
+      });
+    }
+    location.hash = "#" + caminho + (partes.length ? "?" + partes.join("&") : "");
   }
-  function crumbs(items) {
-    var h = '<nav class="crumbs">';
-    items.forEach(function (it, i) {
-      if (i) h += "<span>/</span>";
-      h += it.href ? '<a href="' + esc(it.href) + '">' + esc(it.label) + "</a>" : "<span>" + esc(it.label) + "</span>";
+
+  /* Muda um filtro sem perder os outros.
+     Ex: trocar so o "side" continua com o "q" que ja estava. */
+  function mudarFiltro(mudancas) {
+    var filtros = lerUrl().filtros;
+    Object.keys(mudancas).forEach(function (chave) {
+      if (mudancas[chave] == null || mudancas[chave] === "") delete filtros[chave];
+      else filtros[chave] = mudancas[chave];
     });
-    return h + "</nav>";
+    irPara(lerUrl().caminho, filtros);
   }
-  function notice(text, kind) {
-    return '<div class="notice ' + (kind || "") + '"><span class="n-ico">' + (kind === "info" ? "i" : "!") +
-      "</span><div>" + text + "</div></div>";
+
+  /* =================================================================
+     PARTE 3 - BLOCOS DE TELA REAPROVEITADOS
+     ================================================================= */
+
+  /* Cabeçalho de uma seção: o texto do lado esquerdo e o botão do lado direito. */
+  function cabecalhoDeSecao(etiqueta, titulo, descricao, botaoExtra) {
+    return '<div class="sec-head"><div><span class="kicker">' + escapar(etiqueta) + "</span><h2>" +
+      escapar(titulo) + "</h2>" + (descricao ? "<p>" + escapar(descricao) + "</p>" : "") + "</div>" +
+      '<div class="spacer"></div>' + (botaoExtra || "") + "</div>";
   }
-  function opCard(op) {
-    return '<a class="card ' + (op.side === "ATK" ? "atk" : "def") + '" href="#/agente/' + enc(op.id) + '">' +
+
+  /* O caminho de migalhas no topo: Inicio / Agentes / Ash */
+  function migalhas(itens) {
+    var html = '<nav class="crumbs">';
+    itens.forEach(function (item, indice) {
+      if (indice) html += "<span>/</span>";
+      html += item.link
+        ? '<a href="' + escapar(item.link) + '">' + escapar(item.texto) + "</a>"
+        : "<span>" + escapar(item.texto) + "</span>";
+    });
+    return html + "</nav>";
+  }
+
+  /* A caixa de aviso azul ou amarela. */
+  function aviso(texto, tipo) {
+    return '<div class="notice ' + (tipo || "") + '"><span class="n-ico">' +
+      (tipo === "info" ? "i" : "!") + "</span><div>" + texto + "</div></div>";
+  }
+
+  /* O quadradinho de um Operador dentro de uma lista. */
+  function cartaoDoOperador(operador) {
+    var classeDoLado = operador.side === "ATK" ? "atk" : "def";
+    var bolinhasDeVida = operador.health === 125 ? 3 : operador.health === 110 ? 2 : 1;
+
+    return '<a class="card ' + classeDoLado + '" href="#/agente/' + codificarParaLink(operador.id) + '">' +
       '<div class="card-top">' +
-        '<div class="avatar">' + esc(initials(op.n)) + "</div>" +
-        '<div class="card-title"><h3>' + esc(op.n) + "</h3>" +
-        '<div class="sub">' + esc(op.ctu) + " &middot; " + esc(op.reg) + "</div></div>" +
-        '<span class="side-badge ' + (op.side === "ATK" ? "atk" : "def") + '">' + sideShort(op.side) + "</span>" +
+        '<div class="avatar">' + escapar(iniciais(operador.name)) + "</div>" +
+        '<div class="card-title"><h3>' + escapar(operador.name) + "</h3>" +
+        '<div class="sub">' + escapar(operador.unit) + " &middot; " + escapar(operador.region) + "</div></div>" +
+        '<span class="side-badge ' + classeDoLado + '">' + siglaDoLado(operador.side) + "</span>" +
       "</div>" +
-      '<div class="card-body"><div class="gadget-line"><b>Gadget principal</b>' + esc(op.g) + "</div></div>" +
+      '<div class="card-body"><div class="gadget-line"><b>Gadget principal</b>' + escapar(operador.gadget) + "</div></div>" +
       '<div class="card-foot">' +
-        '<span class="stat-mini"><i>vida</i>' + dots(op.h === 125 ? 3 : op.h === 110 ? 2 : 1) + op.h + "</span>" +
-        '<span class="stat-mini"><i>vel</i>' + dots(op.sp, op.side === "ATK" ? "atk" : "def") + op.sp + "</span>" +
-        '<span class="sp">' + esc(op.r.map(roleLabel).join(" / ")) + "</span>" +
+        '<span class="stat-mini"><i>vida</i>' + bolinhas(bolinhasDeVida) + operador.health + "</span>" +
+        '<span class="stat-mini"><i>vel</i>' + bolinhas(operador.speed, classeDoLado) + operador.speed + "</span>" +
+        '<span class="sp">' + escapar(operador.roles.map(nomeDaFuncao).join(" / ")) + "</span>" +
       "</div></a>";
   }
-  function wCard(w) {
-    var hasMeta = !!w.meta;
-    return '<a class="card w-card" href="#/arma/' + encodeURIComponent(w.n) + '">' +
+
+  /* O quadradinho de uma arma dentro de uma lista. */
+  function cartaoDaArma(arma) {
+    return '<a class="card w-card" href="#/arma/' + codificarParaLink(arma.name) + '">' +
       '<div class="card-top"><div class="card-title">' +
-        '<span class="wc-type">' + esc(w.t) + "</span>" +
-        '<h3 style="margin-top:2px">' + esc(w.n) + "</h3>" +
+        '<span class="wc-type">' + escapar(arma.type) + "</span>" +
+        '<h3 style="margin-top:2px">' + escapar(arma.name) + "</h3>" +
       "</div></div>" +
       '<div class="spec-row">' +
-        '<div class="spec"><b>' + esc(w.dmg) + '</b><span>dano</span></div>' +
-        '<div class="spec"><b>' + esc(w.rpm) + '</b><span>rpm</span></div>' +
-        '<div class="spec"><b>' + esc(w.mag) + '</b><span>carreg.</span></div>' +
-        '<div class="spec"><b>' + w.slots.length + '</b><span>slots</span></div>' +
+        '<div class="spec"><b>' + escapar(arma.damage) + '</b><span>dano</span></div>' +
+        '<div class="spec"><b>' + escapar(arma.rpm) + '</b><span>rpm</span></div>' +
+        '<div class="spec"><b>' + escapar(arma.magazine) + '</b><span>carreg.</span></div>' +
+        '<div class="spec"><b>' + arma.slots.length + '</b><span>slots</span></div>' +
       "</div>" +
-      '<div class="card-foot"><span class="meta-flag">' + (hasMeta ? "meta de pecas" : "sem meta") + "</span>" +
+      '<div class="card-foot"><span class="meta-flag">' + (arma.meta ? "meta de pecas" : "sem meta") + "</span>" +
       '<span class="sp">ver</span></div></a>';
   }
 
-  /* ------------------------------------------------ home */
-  function viewHome() {
-    var ps = D.patchnotes;
-    var season = ps.currentSeason;
-    var latest = ps.patches.slice(0, 3);
-    var rel = ps.operatorReleases.slice(0, 3);
-    var news = (D.news.items || []).slice(0, 3);
-    var atk = D.operators.filter(function (o) { return o.side === "ATK"; }).length;
-    var def = D.operators.length - atk;
+  /* =================================================================
+     PARTE 4 - UMA FUNCAO POR PAGINA
+     Cada funcao devolve uma string de HTML.
+     ================================================================= */
 
-    var h = "";
-    h += '<section class="hero">' +
-      '<div>' +
-        '<span class="eyebrow">Hub de comunidade &middot; dados de ' + esc(fmtDate(CFG.snapshot)) + "</span>" +
+  /* -----------------------------------------------------------------
+     PAGINA INICIAL
+     ----------------------------------------------------------------- */
+  function paginaInicial() {
+    var balanceamentos = DADOS.patchnotes;
+    var temporadaAtual = balanceamentos.currentSeason;
+    var ultimosPatches = balanceamentos.patches.slice(0, 3);
+    var ultimosOperadores = balanceamentos.operatorReleases.slice(0, 3);
+    var totalAtacantes = DADOS.operators.filter(function (operador) {
+      return operador.side === "ATK";
+    }).length;
+    var totalDefensores = DADOS.operators.length - totalAtacantes;
+
+    var html = "";
+
+    /* Faixa do topo */
+    html += '<section class="hero">' +
+      "<div>" +
+        '<span class="eyebrow">Hub de comunidade &middot; dados de ' + escapar(formatarData(CONFIG.snapshot)) + "</span>" +
         "<h1>Rainbow Six <span>Siege</span> em um so lugar</h1>" +
-        '<p class="lead">Os ' + D.operators.length + ' operadores com gadget principal, gadgets secundarios, ' +
+        '<p class="lead">Os ' + DADOS.operators.length + ' operadores com gadget principal, gadgets secundarios, ' +
         "habilidade unica e armas, com o percentual estimado das pecas mais usadas. Mais as patch notes oficiais, " +
         "noticias do jogo e os rankings.</p>" +
         '<div class="hero-actions">' +
-          '<a class="btn btn-primary" href="#/agentes">Ver os ' + D.operators.length + " operadores</a>" +
+          '<a class="btn btn-primary" href="#/agentes">Ver os ' + DADOS.operators.length + " operadores</a>" +
           '<a class="btn" href="#/armas">Catalogo de armas</a>' +
           '<a class="btn" href="#/noticias">Balanceamentos</a>' +
         "</div>" +
       "</div>" +
       '<div class="season-card">' +
         '<span class="sc-label">Temporada atual</span>' +
-        '<div class="sc-name">' + esc(season.name) + "</div>" +
-        '<div class="sc-date">' + esc(season.label) + " &middot; desde " + esc(fmtDate(season.startedAt)) + "</div>" +
+        '<div class="sc-name">' + escapar(temporadaAtual.name) + "</div>" +
+        '<div class="sc-date">' + escapar(temporadaAtual.label) + " &middot; desde " + escapar(formatarData(temporadaAtual.startedAt)) + "</div>" +
         "<hr>" +
         "<ul>" +
-          "<li><b>Patch mais recente:</b> " + esc(latest[0].version) + " (" + esc(fmtDate(latest[0].date)) + ")</li>" +
-          "<li><b>Operador novo:</b> " + esc(rel[0].name) + " &mdash; " + esc(rel[0].gadget) + "</li>" +
-          "<li><b>" + ps.patches.length + "</b> patches de balanceamento mapeados</li>" +
-          "<li><b>Proximo evento:</b> " + esc(D.rankings.circuit.majorNext.name) + "</li>" +
+          "<li><b>Patch mais recente:</b> " + escapar(ultimosPatches[0].version) + " (" + escapar(formatarData(ultimosPatches[0].date)) + ")</li>" +
+          "<li><b>Operador novo:</b> " + escapar(ultimosOperadores[0].name) + " &mdash; " + escapar(ultimosOperadores[0].gadget) + "</li>" +
+          "<li><b>" + balanceamentos.patches.length + "</b> patches de balanceamento mapeados</li>" +
+          "<li><b>Proximo evento:</b> " + escapar(DADOS.rankings.circuit.majorNext.name) + "</li>" +
         "</ul>" +
       "</div>" +
     "</section>";
 
-    h += '<div class="stats">' +
-      '<div class="stat"><b>' + D.operators.length + "</b><span>operadores</span></div>" +
-      '<div class="stat"><b>' + atk + " / " + def + "</b><span>atacantes / defensores</span></div>" +
-      '<div class="stat"><b>' + D.weapons.length + "</b><span>armas no catalogo</span></div>" +
-      '<div class="stat"><b>' + Object.keys(D.attachmentEffects).length + "</b><span>tipos de peca</span></div>" +
-      '<div class="stat"><b>' + ps.patches.length + "</b><span>patches</span></div>" +
+    /* Números grandes */
+    html += '<div class="stats">' +
+      '<div class="stat"><b>' + DADOS.operators.length + "</b><span>operadores</span></div>" +
+      '<div class="stat"><b>' + totalAtacantes + " / " + totalDefensores + "</b><span>atacantes / defensores</span></div>" +
+      '<div class="stat"><b>' + DADOS.weapons.length + "</b><span>armas no catalogo</span></div>" +
+      '<div class="stat"><b>' + Object.keys(DADOS.attachmentEffects).length + "</b><span>tipos de peca</span></div>" +
+      '<div class="stat"><b>' + balanceamentos.patches.length + "</b><span>patches</span></div>" +
     "</div>";
 
-    h += notice(
-      "<b>Sobre os percentuais de pecas:</b> a Ubisoft nao publica telemetria de uso de attachments. " +
-      "Todos os percentuais de pecas deste site sao <b>estimativas de consenso da comunidade</b> " +
-      "(guias, Reddit e jogadores pro), com um indicador de confianca em cada item. Os stats de armas e os " +
-      "balanceamentos vem de fontes oficiais e de datasets cross-checkados.");
+    /* Aviso sobre os percentuais serem estimativas */
+    html += aviso(
+      "<b>Sobre os percentuais de pecas:</b> a Ubisoft nao publica o numero de uso de pecas. " +
+      "Todos os percentuais deste site sao <b>estimativas da comunidade</b> " +
+      "(guias, Reddit e jogadores profissionais), com um indicador de confianca em cada item. " +
+      "Os numeros de dano das armas e os balanceamentos vem das notas oficiais da Ubisoft.");
 
-    /* destaques */
-    h += secHead("Destaque", "Operadores lancados recentemente", "Gadgets assinatura das ultimas temporadas.");
-    h += '<div class="grid-ops">';
-    rel.forEach(function (r) {
-      var op = D.operators.filter(function (o) { return norm(o.n) === norm(r.name); })[0];
-      h += op ? opCard(op) :
-        '<div class="card"><div class="card-top"><div class="card-title"><h3>' + esc(r.name) +
-        '</h3><div class="sub">' + esc(r.gadget) + "</div></div></div>" +
-        '<div class="card-body"><div class="gadget-line">' + esc(r.description || "") + "</div></div></div>";
+    /* Operadores recém-chegados */
+    html += cabecalhoDeSecao("Destaque", "Operadores lancados recentemente", "Gadgets assinatura das ultimas temporadas.");
+    html += '<div class="grid-ops">';
+    ultimosOperadores.forEach(function (lancamento) {
+      var operador = DADOS.operators.filter(function (item) {
+        return normalizar(item.name) === normalizar(lancamento.name);
+      })[0];
+
+      if (operador) {
+        html += cartaoDoOperador(operador);
+      } else {
+        /* O Operador do balanceamento nao esta no cadastro: mostra so o texto. */
+        html += '<div class="card"><div class="card-top"><div class="card-title"><h3>' + escapar(lancamento.name) +
+          '</h3><div class="sub">' + escapar(lancamento.gadget) + "</div></div></div>" +
+          '<div class="card-body"><div class="gadget-line">' + escapar(lancamento.description || "") + "</div></div></div>";
+      }
     });
-    h += "</div>";
+    html += "</div>";
 
-    /* ultimos balanceamentos */
-    h += secHead("Balanceamento", "Ultimas patch notes", "Numeros oficiais direto das notas da Ubisoft.",
+    /* Últimos balanceamentos */
+    html += cabecalhoDeSecao("Balanceamento", "Ultimas patch notes", "Numeros oficiais direto das notas da Ubisoft.",
       '<a class="btn" href="#/noticias?tab=balanceamentos">Ver todas</a>');
-    h += '<div class="home-grid">';
-    latest.forEach(function (p) {
-      h += '<div class="card"><div class="card-top"><div class="card-title">' +
-        '<span class="wc-type">' + esc(p.label) + " &middot; " + esc(p.version) + "</span>" +
-        '<h3 style="margin-top:2px">' + esc(fmtDate(p.date)) + "</h3>" +
-        '<div class="sub">' + esc(p.headline || "") + "</div></div></div>" +
-        '<div class="card-body"><div class="gadget-line">' + (p.balance || []).length + " mudancas de balanceamento</div></div>" +
-        '<div class="card-foot"><span class="sp" style="margin:0">' + esc(p.season) + "</span></div></div>";
+    html += '<div class="home-grid">';
+    ultimosPatches.forEach(function (patch) {
+      html += '<div class="card"><div class="card-top"><div class="card-title">' +
+        '<span class="wc-type">' + escapar(patch.label) + " &middot; " + escapar(patch.version) + "</span>" +
+        '<h3 style="margin-top:2px">' + escapar(formatarData(patch.date)) + "</h3>" +
+        '<div class="sub">' + escapar(patch.headline || "") + "</div></div></div>" +
+        '<div class="card-body"><div class="gadget-line">' +
+        (patch.balance || []).length + " mudancas de balanceamento</div></div>" +
+        '<div class="card-foot"><span class="sp" style="margin:0">' + escapar(patch.season) + "</span></div></div>";
     });
-    h += "</div>";
+    html += "</div>";
 
-    /* noticias + ranking */
-    h += '<div class="two-col" style="margin-top:34px">';
-    h += "<div>" + secHead("Noticias", "Ultimas noticias", "", '<a class="btn" href="#/noticias">Ver todas</a>') + newsList((D.news.items || []).slice(0, 4), true) + "</div>";
-    h += "<div>" + secHead("Ranking", "Times no topo", "Pontos oficiais de qualificacao para o SI 2027.",
-      '<a class="btn" href="#/rankings">Ver ranking</a>');
-    h += '<div class="rank-teaser">' + D.rankings.teams.slice(0, 6).map(function (t, i) {
-      return '<div class="rt"><span class="p">' + (i + 1) + '</span><div><div class="n">' + esc(t.name) +
-        '</div><div class="r">' + esc(t.region) + " &middot; " + t.si + " pts SI</div></div></div>";
-    }).join("") + "</div>" + "</div>";
-    h += "</div>";
+    /* Notícias e ranking, lado a lado */
+    html += '<div class="two-col" style="margin-top:34px">';
 
-    return h;
+    html += "<div>" + cabecalhoDeSecao("Noticias", "Ultimas noticias", "",
+      '<a class="btn" href="#/noticias">Ver todas</a>') +
+      listaDeNoticias((DADOS.news.items || []).slice(0, 4), true) + "</div>";
+
+    html += "<div>" + cabecalhoDeSecao("Ranking", "Times no topo",
+      "Pontos oficiais de qualificacao para o SI 2027.", '<a class="btn" href="#/rankings">Ver ranking</a>') +
+      '<div class="rank-teaser">' + DADOS.rankings.teams.slice(0, 6).map(function (time, indice) {
+        return '<div class="rt"><span class="p">' + (indice + 1) + '</span><div><div class="n">' + escapar(time.name) +
+          '</div><div class="r">' + escapar(time.region) + " &middot; " + time.siPoints + " pts SI</div></div></div>";
+      }).join("") + "</div></div>";
+
+    html += "</div>";
+
+    return html;
   }
 
-  /* ------------------------------------------------ agentes */
-  function filterOperators(q) {
-    return D.operators.filter(function (o) {
-      if (q.side && o.side !== q.side) return false;
-      if (q.speed && String(o.sp) !== q.speed) return false;
-      if (q.health && String(o.h) !== q.health) return false;
-      if (q.year && String(o.y) !== q.year) return false;
-      if (q.role && o.r.indexOf(q.role) === -1) return false;
-      if (q.ctu && o.ctu !== q.ctu) return false;
-      if (q.q) {
-        var t = norm(q.q);
-        var hay = norm([o.n, o.ctu, o.reg, o.g, o.gd, o.un, o.bio, o.y, o.r.join(" ")].join(" "));
-        if (hay.indexOf(t) === -1) return false;
+  /* -----------------------------------------------------------------
+     LISTA DE OPERADORES
+     ----------------------------------------------------------------- */
+
+  /* Aplica os filtros da URL e devolve só quem passou em todos.
+     Obs: o filtro de CTU continua chamado "ctu" na URL (e não "unit",
+     como o campo do arquivo) para os links salvos no navegador não
+     deixarem de funcionar. */
+  function filtrarOperadores(filtros) {
+    return DADOS.operators.filter(function (operador) {
+      if (filtros.side && operador.side !== filtros.side) return false;
+      if (filtros.speed && String(operador.speed) !== filtros.speed) return false;
+      if (filtros.health && String(operador.health) !== filtros.health) return false;
+      if (filtros.year && String(operador.year) !== filtros.year) return false;
+      if (filtros.role && operador.roles.indexOf(filtros.role) === -1) return false;
+      if (filtros.ctu && operador.unit !== filtros.ctu) return false;
+
+      if (filtros.q) {
+        var textoBuscado = normalizar(filtros.q);
+        var textoDoOperador = normalizar([
+          operador.name, operador.unit, operador.region, operador.gadget,
+          operador.gadgetDescription, operador.uniqueAbility, operador.bio,
+          operador.year, operador.roles.join(" ")
+        ].join(" "));
+        if (textoDoOperador.indexOf(textoBuscado) === -1) return false;
       }
       return true;
     });
   }
-  function viewAgents(q) {
-    var list = filterOperators(q);
-    var ctus = [];
-    D.operators.forEach(function (o) { if (ctus.indexOf(o.ctu) === -1) ctus.push(o.ctu); });
-    ctus.sort();
-    var years = [];
-    D.operators.forEach(function (o) { if (years.indexOf(o.y) === -1) years.push(o.y); });
-    years.sort(function (a, b) { return b - a; });
 
-    function opts(vals, sel, lab) {
-      return '<option value="">' + lab + "</option>" + vals.map(function (v) {
-        return '<option value="' + esc(v) + '"' + (String(sel) === String(v) ? " selected" : "") + ">" + esc(v) + "</option>";
-      }).join("");
+  function paginaOperadores(filtros) {
+    var lista = filtrarOperadores(filtros);
+
+    /* Listas dos <select>: CTUs e anos que existem de fato no cadastro. */
+    var unidades = [];
+    DADOS.operators.forEach(function (operador) {
+      if (unidades.indexOf(operador.unit) === -1) unidades.push(operador.unit);
+    });
+    unidades.sort();
+
+    var anos = [];
+    DADOS.operators.forEach(function (operador) {
+      if (anos.indexOf(operador.year) === -1) anos.push(operador.year);
+    });
+    anos.sort(function (a, b) { return b - a; });
+
+    /* Monta as <option> de um <select> de filtro. */
+    function opcoes(valores, selecionado, textoPadrao) {
+      var html = '<option value="">' + textoPadrao + "</option>";
+      valores.forEach(function (valor) {
+        var marcado = String(selecionado) === String(valor) ? " selected" : "";
+        html += '<option value="' + escapar(valor) + '"' + marcado + ">" + escapar(valor) + "</option>";
+      });
+      return html;
     }
 
-    var h = "";
-    h += secHead("Operadores", "Os " + D.operators.length + " agentes",
-      "Gadget principal, gadgets secundarios, habilidade unica e armas de cada operador.");
-    h += crumbs([{ label: "Inicio", href: "#/" }, { label: "Agentes" }]);
+    var temFiltro = filtros.side || filtros.role || filtros.ctu ||
+                    filtros.speed || filtros.health || filtros.year || filtros.q;
 
-    h += '<div class="toolbar">' +
+    var html = "";
+    html += cabecalhoDeSecao("Operadores", "Os " + DADOS.operators.length + " agentes",
+      "Gadget principal, gadgets secundarios, habilidade unica e armas de cada operador.");
+    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Agentes" }]);
+
+    /* Barra de filtros */
+    html += '<div class="toolbar">' +
       '<span class="tb-label">Filtros</span>' +
-      '<select id="f-side" aria-label="Lado">' + opts(["ATK", "DEF"], q.side, "Todos os lados") + "</select>" +
-      '<select id="f-role" aria-label="Funcao">' + opts(D.roles.map(function (r) { return r.id; }), q.role, "Todas as funcoes") + "</select>" +
-      '<select id="f-ctu" aria-label="CTU">' + opts(ctus, q.ctu, "Todas as CTUs") + "</select>" +
-      '<select id="f-speed" aria-label="Velocidade">' + opts([1, 2, 3], q.speed, "Qualquer velocidade") + "</select>" +
-      '<select id="f-health" aria-label="Vida">' + opts([100, 110, 125], q.health, "Qualquer vida") + "</select>" +
-      '<select id="f-year" aria-label="Ano">' + opts(years, q.year, "Qualquer ano") + "</select>" +
+      '<select id="f-side" aria-label="Lado">' + opcoes(["ATK", "DEF"], filtros.side, "Todos os lados") + "</select>" +
+      '<select id="f-role" aria-label="Funcao">' + opcoes(DADOS.roles.map(function (funcao) { return funcao.id; }), filtros.role, "Todas as funcoes") + "</select>" +
+      '<select id="f-ctu" aria-label="CTU">' + opcoes(unidades, filtros.ctu, "Todas as CTUs") + "</select>" +
+      '<select id="f-speed" aria-label="Velocidade">' + opcoes([1, 2, 3], filtros.speed, "Qualquer velocidade") + "</select>" +
+      '<select id="f-health" aria-label="Vida">' + opcoes([100, 110, 125], filtros.health, "Qualquer vida") + "</select>" +
+      '<select id="f-year" aria-label="Ano">' + opcoes(anos, filtros.year, "Qualquer ano") + "</select>" +
       '<div class="divider"></div>' +
-      '<input class="tb-input" id="f-q" type="search" placeholder="Buscar no filtro..." value="' + esc(q.q || "") + '" aria-label="Buscar no filtro">' +
-      '<span class="tb-count"><b>' + list.length + "</b> de " + D.operators.length + "</span>" +
-      ((q.side || q.role || q.ctu || q.speed || q.health || q.year || q.q) ? '<a class="btn" href="#/agentes">Limpar</a>' : "") +
+      '<input class="tb-input" id="f-q" type="search" placeholder="Buscar no filtro..." value="' +
+        escapar(filtros.q || "") + '" aria-label="Buscar no filtro">' +
+      '<span class="tb-count"><b>' + lista.length + "</b> de " + DADOS.operators.length + "</span>" +
+      (temFiltro ? '<a class="btn" href="#/agentes">Limpar</a>' : "") +
     "</div>";
 
-    if (!list.length) {
-      h += '<div class="empty-state"><b>Nenhum operador encontrado</b>Tente remover algum filtro.</div>';
+    if (!lista.length) {
+      html += '<div class="empty-state"><b>Nenhum operador encontrado</b>Tente remover algum filtro.</div>';
     } else {
-      h += '<div class="grid-ops">' + list.map(opCard).join("") + "</div>";
+      html += '<div class="grid-ops">' + lista.map(cartaoDoOperador).join("") + "</div>";
     }
 
-    /* referencia de gadgets */
-    h += secHead("Referencia", "Pool de gadgets secundarios",
+    /* Explicação do pool de gadgets secundários */
+    html += cabecalhoDeSecao("Referencia", "Pool de gadgets secundarios",
       "Gadgets de escolha livre que cada operador carrega alem do gadget assinatura. Isso muda entre temporadas: confira o patch atual.");
-    h += '<div class="panes">';
-    ["ATK", "DEF"].forEach(function (side) {
-      h += '<div class="pane"><h3>' + (side === "ATK" ? "Pool de atacante" : "Pool de defensor") + "</h3><ul class='sec-list'>";
-      D.gadgetPool[side].forEach(function (g) {
-        h += "<li><span class='g-ico'>" + (side === "ATK" ? "A" : "D") + "</span><div><b>" + esc(g.n) + "</b><small>" +
-          esc(g.d) + "</small></div></li>";
+    html += '<div class="panes">';
+    ["ATK", "DEF"].forEach(function (lado) {
+      html += '<div class="pane"><h3>' + (lado === "ATK" ? "Pool de atacante" : "Pool de defensor") + "</h3><ul class='sec-list'>";
+      DADOS.gadgetPool[lado].forEach(function (gadget) {
+        html += "<li><span class='g-ico'>" + (lado === "ATK" ? "A" : "D") + "</span><div><b>" +
+          escapar(gadget.name) + "</b><small>" + escapar(gadget.description) + "</small></div></li>";
       });
-      h += "</ul></div>";
+      html += "</ul></div>";
     });
-    h += "</div>";
-    return h;
+    html += "</div>";
+
+    return html;
   }
 
-  /* ------------------------------------------------ detalhe do operador */
-  function viewAgent(id) {
-    var op = opById(id);
-    if (!op) return '<div class="empty-state"><b>Operador nao encontrado</b><a href="#/agentes">Voltar para a lista</a></div>';
-    var cls = op.side === "ATK" ? "atk" : "def";
-    var wp = D.operatorWeapons(op);
-    var allW = wp.primary.concat(wp.secondary);
+  /* -----------------------------------------------------------------
+     DETALHE DE UM OPERADOR
+     ----------------------------------------------------------------- */
+  function paginaOperador(id) {
+    var operador = acharOperador(id);
+    if (!operador) {
+      return '<div class="empty-state"><b>Operador nao encontrado</b><a href="#/agentes">Voltar para a lista</a></div>';
+    }
 
-    var h = "";
-    h += crumbs([{ label: "Inicio", href: "#/" }, { label: "Agentes", href: "#/agentes" }, { label: op.n }]);
-    h += '<section class="detail-hero ' + cls + '">' +
-      '<div class="avatar">' + esc(initials(op.n)) + "</div>" +
+    var classeDoLado = operador.side === "ATK" ? "atk" : "def";
+    var armas = DADOS.operatorWeapons(operador);
+    var todasAsArmas = armas.primary.concat(armas.secondary);
+    var bolinhasDeVida = operador.health === 125 ? 3 : operador.health === 110 ? 2 : 1;
+
+    var html = "";
+
+    html += migalhas([
+      { texto: "Inicio", link: "#/" },
+      { texto: "Agentes", link: "#/agentes" },
+      { texto: operador.name }
+    ]);
+
+    html += '<section class="detail-hero ' + classeDoLado + '">' +
+      '<div class="avatar">' + escapar(iniciais(operador.name)) + "</div>" +
       "<div>" +
-        '<span class="eyebrow">' + sideLabel(op.side) + " &middot; " + esc(op.ctu) + "</span>" +
-        "<h1>" + esc(op.n) + "</h1>" +
+        '<span class="eyebrow">' + nomeDoLado(operador.side) + " &middot; " + escapar(operador.unit) + "</span>" +
+        "<h1>" + escapar(operador.name) + "</h1>" +
         '<div class="badges">' +
-          '<span class="badge">' + esc(op.reg) + "</span>" +
-          '<span class="badge">lancado em <b>' + op.y + "</b></span>" +
-          '<span class="badge">vida <b>' + op.h + "</b> " + dots(op.h === 125 ? 3 : op.h === 110 ? 2 : 1) + "</span>" +
-          '<span class="badge">velocidade <b>' + op.sp + "</b> " + dots(op.sp, cls) + "</span>" +
-          op.r.map(function (r) { return '<span class="badge gold">' + esc(roleLabel(r)) + "</span>"; }).join("") +
+          '<span class="badge">' + escapar(operador.region) + "</span>" +
+          '<span class="badge">lancado em <b>' + operador.year + "</b></span>" +
+          '<span class="badge">vida <b>' + operador.health + "</b> " + bolinhas(bolinhasDeVida) + "</span>" +
+          '<span class="badge">velocidade <b>' + operador.speed + "</b> " + bolinhas(operador.speed, classeDoLado) + "</span>" +
+          operador.roles.map(function (funcao) {
+            return '<span class="badge gold">' + escapar(nomeDaFuncao(funcao)) + "</span>";
+          }).join("") +
         "</div>" +
-        '<p class="muted" style="max-width:70ch">' + esc(op.bio) + "</p>" +
+        '<p class="muted" style="max-width:70ch">' + escapar(operador.bio) + "</p>" +
       "</div>" +
     "</section>";
 
-    h += '<div class="panes">';
-    h += '<div class="pane"><h3>Gadget principal</h3>' +
-      '<div class="gadget-box"><h4>' + esc(op.g) + "</h4><p>" + esc(op.gd) + "</p></div>" +
-      '<p class="small muted" style="margin:0">Classe do gadget: <b>' + esc(op.gt) + "</b></p></div>";
+    html += '<div class="panes">';
 
-    h += '<div class="pane"><h3>Habilidade unica</h3>' +
-      '<div class="gadget-box unique"><p class="lead-big">' + esc(op.un) + "</p></div>" +
+    /* Gadget principal */
+    html += '<div class="pane"><h3>Gadget principal</h3>' +
+      '<div class="gadget-box"><h4>' + escapar(operador.gadget) + "</h4><p>" + escapar(operador.gadgetDescription) + "</p></div>" +
+      '<p class="small muted" style="margin:0">Classe do gadget: <b>' + escapar(operador.gadgetType) + "</b></p></div>";
+
+    /* Habilidade única */
+    html += '<div class="pane"><h3>Habilidade unica</h3>' +
+      '<div class="gadget-box unique"><p class="lead-big">' + escapar(operador.uniqueAbility) + "</p></div>" +
       '<p class="small muted" style="margin:0">E o que separa este operador de todos os outros do mesmo lado.</p></div>';
 
-    /* secundarios */
-    h += '<div class="pane"><h3>Gadgets secundarios (' + op.sec.length + ")</h3><ul class='sec-list'>";
-    op.sec.forEach(function (name) {
-      var def = D.gadgetPool[op.side].filter(function (g) { return norm(g.n) === norm(name); })[0];
-      h += "<li><span class='g-ico'>" + (op.side === "ATK" ? "A" : "D") + "</span><div><b>" + esc(name) + "</b>" +
-        (def ? "<small>" + esc(def.d) + "</small>" : "") + "</div></li>";
+    /* Gadgets secundários */
+    html += '<div class="pane"><h3>Gadgets secundarios (' + operador.secondaryGadgets.length + ")</h3><ul class='sec-list'>";
+    operador.secondaryGadgets.forEach(function (nomeDoGadget) {
+      var descricaoDoGadget = DADOS.gadgetPool[operador.side].filter(function (gadget) {
+        return normalizar(gadget.name) === normalizar(nomeDoGadget);
+      })[0];
+      html += "<li><span class='g-ico'>" + (operador.side === "ATK" ? "A" : "D") + "</span><div><b>" +
+        escapar(nomeDoGadget) + "</b>" +
+        (descricaoDoGadget ? "<small>" + escapar(descricaoDoGadget.description) + "</small>" : "") + "</div></li>";
     });
-    h += "</ul></div>";
+    html += "</ul></div>";
 
-    /* armas */
-    h += '<div class="pane full"><h3>Armas (' + (allW.length + 1) + ")</h3>";
-    if (!wp.primary.length && !wp.secondary.length) {
-      h += '<p class="muted">Nenhuma arma de fogo registrada para este operador.</p>';
+    /* Armas */
+    html += '<div class="pane full"><h3>Armas (' + (todasAsArmas.length + 1) + ")</h3>";
+    if (!armas.primary.length && !armas.secondary.length) {
+      html += '<p class="muted">Nenhuma arma de fogo registrada para este operador.</p>';
     } else {
-      if (wp.primary.length) {
-        h += '<p class="small muted" style="margin-bottom:8px">Arma principal</p><div class="weapon-rows">';
-        wp.primary.forEach(function (w) { h += weaponRow(w, true); });
-        h += "</div>";
+      if (armas.primary.length) {
+        html += '<p class="small muted" style="margin-bottom:8px">Arma principal</p><div class="weapon-rows">';
+        armas.primary.forEach(function (arma) { html += linhaDaArma(arma, true); });
+        html += "</div>";
       }
-      if (wp.secondary.length) {
-        h += '<p class="small muted" style="margin:16px 0 8px">Arma secundaria</p><div class="weapon-rows">';
-        wp.secondary.forEach(function (w) { h += weaponRow(w, false); });
-        h += "</div>";
+      if (armas.secondary.length) {
+        html += '<p class="small muted" style="margin:16px 0 8px">Arma secundaria</p><div class="weapon-rows">';
+        armas.secondary.forEach(function (arma) { html += linhaDaArma(arma, false); });
+        html += "</div>";
       }
-      h += notice("Os percentuais abaixo sao <b>estimativas de consenso da comunidade</b>. A Ubisoft nao publica " +
+      html += aviso("Os percentuais abaixo sao <b>estimativas da comunidade</b>. A Ubisoft nao publica " +
         "percentual de uso de pecas. Clique na arma para ver o efeito de cada peca e quais operadores tambem a usam.", "info");
     }
-    h += "</div>";
+    html += "</div>";
 
-    /* contra quem e bom */
-    h += '<div class="pane full"><h3>Melhor uso</h3><p class="lead-big">' + esc(op.best) + "</p></div>";
-    h += "</div>";
+    /* Melhor uso */
+    html += '<div class="pane full"><h3>Melhor uso</h3><p class="lead-big">' + escapar(operador.best) + "</p></div>";
+    html += "</div>";
 
-    /* nav */
-    var idx = D.operators.indexOf(op);
-    var prev = D.operators[idx - 1], next = D.operators[idx + 1];
-    h += '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">' +
-      (prev ? '<a class="btn" href="#/agente/' + enc(prev.id) + '">&larr; ' + esc(prev.n) + "</a>" : "") +
-      (next ? '<a class="btn" href="#/agente/' + enc(next.id) + '">' + esc(next.n) + " &rarr;</a>" : "") +
+    /* Botões de operador anterior e próximo */
+    var posicao = DADOS.operators.indexOf(operador);
+    var anterior = DADOS.operators[posicao - 1];
+    var proximo = DADOS.operators[posicao + 1];
+
+    html += '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">' +
+      (anterior ? '<a class="btn" href="#/agente/' + codificarParaLink(anterior.id) + '">&larr; ' + escapar(anterior.name) + "</a>" : "") +
+      (proximo ? '<a class="btn" href="#/agente/' + codificarParaLink(proximo.id) + '">' + escapar(proximo.name) + " &rarr;</a>" : "") +
       '<a class="btn btn-primary" href="#/agentes">Todos os operadores</a></div>';
-    return h;
+
+    return html;
   }
 
-  function weaponRow(w, primary) {
-    var hasMeta = !!w.meta;
+  /* Uma arma dentro da página de um Operador, com as barras de peça. */
+  function linhaDaArma(arma, ehPrimaria) {
+    var temMeta = !!arma.meta;
+    var rotulo = ehPrimaria ? "arma principal" : "arma secundaria";
+
     return '<div class="wrow" data-wrow>' +
       '<button class="wrow-head" data-wtoggle>' +
         '<span class="arrow">&#9656;</span>' +
-        '<span class="wname">' + esc(w.n) + "</span>" +
-        '<span class="wtype">' + esc(w.t) + "</span>" +
-        '<span class="sp">' + (hasMeta ? "meta de pecas" : "sem dados de meta") + "</span>" +
+        '<span class="wname">' + escapar(arma.name) + "</span>" +
+        '<span class="wtype">' + escapar(arma.type) + "</span>" +
+        '<span class="sp">' + (temMeta ? "meta de pecas" : "sem dados de meta") + "</span>" +
       "</button>" +
       '<div class="wrow-body">' +
         '<div class="wrow-stats">' +
-          "<span><b>Dano</b> " + esc(w.dmg) + "</span>" +
-          "<span><b>RPM</b> " + esc(w.rpm) + "</span>" +
-          "<span><b>Carregador</b> " + esc(w.mag) + "</span>" +
-          "<span><b>Slots</b> " + w.slots.length + "</span>" +
-          (primary ? "<span><b>Tipo</b> arma principal</span>" : "<span><b>Tipo</b> arma secundaria</span>") +
+          "<span><b>Dano</b> " + escapar(arma.damage) + "</span>" +
+          "<span><b>RPM</b> " + escapar(arma.rpm) + "</span>" +
+          "<span><b>Carregador</b> " + escapar(arma.magazine) + "</span>" +
+          "<span><b>Slots</b> " + arma.slots.length + "</span>" +
+          "<span><b>Tipo</b> " + rotulo + "</span>" +
         "</div>" +
-        (w.note ? '<p class="small muted">' + esc(w.note) + "</p>" : "") +
-        (hasMeta ? metaBlocks(w) :
+        (arma.note ? '<p class="small muted">' + escapar(arma.note) + "</p>" : "") +
+        (temMeta ? barrasDaMeta(arma) :
           '<p class="small muted" style="margin:8px 0 0">Nao ha dados de meta de pecas para esta arma. ' +
-          "Consulte a <a class='src-link' href='" + esc(CFG.sources.attachments) + "' target='_blank' rel='noopener'>wiki de attachments</a> para ver o que cada slot aceita.</p>") +
-        '<p class="small" style="margin:12px 0 0"><a class="src-link" href="#/arma/' + encodeURIComponent(w.n) + '">Abrir pagina completa da arma</a></p>' +
+          "Consulte a <a class='src-link' href='" + escapar(CONFIG.sources.attachments) + "' target='_blank' rel='noopener'>wiki de attachments</a> para ver o que cada slot aceita.</p>") +
+        '<p class="small" style="margin:12px 0 0"><a class="src-link" href="#/arma/' +
+          codificarParaLink(arma.name) + '">Abrir pagina completa da arma</a></p>' +
       "</div></div>";
   }
 
-  function metaBlocks(w) {
-    var h = "";
-    w.slots.forEach(function (s) {
-      var picks = (w.meta && w.meta[s]) || [];
-      if (!picks.length) return;
-      h += '<div class="slot-block"><div class="slot-name">' + esc(slotLabel(s)) + "</div>";
-      picks.forEach(function (p) {
-        h += '<div class="bar"><div class="bar-top"><b>' + esc(p.n) + " " + confTag(p.c) + "</b><span>" + p.p + "%</span></div>" +
-          '<div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, p.p) + '%"></div></div></div>';
+  /* As barras de percentual de peça, uma por slot. */
+  function barrasDaMeta(arma) {
+    var html = "";
+
+    arma.slots.forEach(function (slot) {
+      var pegas = (arma.meta && arma.meta[slot]) || [];
+      if (!pegas.length) return;
+
+      html += '<div class="slot-block"><div class="slot-name">' + escapar(nomeDoSlot(slot)) + "</div>";
+      pegas.forEach(function (peca) {
+        html += '<div class="bar"><div class="bar-top"><b>' + escapar(peca.name) + " " +
+          etiquetaConfianca(peca.confidence) + '</b><span>' + peca.percent + "%</span></div>" +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + Math.min(100, peca.percent) + '%"></div></div></div>';
       });
-      h += "</div>";
+      html += "</div>";
     });
-    if (!h) return '<p class="small muted">Esta arma nao tem slots de peca com dados de meta.</p>';
-    return h;
+
+    if (!html) return '<p class="small muted">Esta arma nao tem slots de peca com dados de meta.</p>';
+    return html;
   }
 
-  /* ------------------------------------------------ armas */
-  var TYPES = ["AR", "SMG", "LMG", "SHOTGUN", "MARKSMAN", "SNIPER", "PISTOL", "SHIELD", "MELEE", "LAUNCHER"];
-  function viewWeapons(q) {
-    var list = D.weapons.filter(function (w) {
-      if (q.type && w.t !== q.type) return false;
-      if (q.only === "meta" && !w.meta) return false;
-      if (q.q) {
-        var t = norm(q.q);
-        if (norm([w.n, w.t, w.note || ""].join(" ")).indexOf(t) === -1) return false;
+  /* -----------------------------------------------------------------
+     LISTA DE ARMAS
+     ----------------------------------------------------------------- */
+  var TIPOS_DE_ARMA = ["AR", "SMG", "LMG", "SHOTGUN", "MARKSMAN", "SNIPER", "PISTOL", "SHIELD", "MELEE", "LAUNCHER"];
+
+  function paginaArmas(filtros) {
+    var lista = DADOS.weapons.filter(function (arma) {
+      if (filtros.type && arma.type !== filtros.type) return false;
+      if (filtros.only === "meta" && !arma.meta) return false;
+
+      if (filtros.q) {
+        var textoBuscado = normalizar(filtros.q);
+        var textoDaArma = normalizar([arma.name, arma.type, arma.note || ""].join(" "));
+        if (textoDaArma.indexOf(textoBuscado) === -1) return false;
       }
       return true;
     });
 
-    var h = "";
-    h += secHead("Armas", "Catalogo de armas", "Stats das armas, slots de peca e o percentual estimado das pecas mais usadas pelos jogadores.");
-    h += crumbs([{ label: "Inicio", href: "#/" }, { label: "Armas" }]);
-    h += '<div class="toolbar">' +
+    /* Só oferece no filtro os tipos que existem no catálogo. */
+    var tiposQueExistem = TIPOS_DE_ARMA.filter(function (tipo) {
+      return DADOS.weapons.some(function (arma) { return arma.type === tipo; });
+    });
+    var opcoesDeTipo = tiposQueExistem.map(function (tipo) {
+      return '<option value="' + tipo + '"' + (filtros.type === tipo ? " selected" : "") + ">" + tipo + "</option>";
+    }).join("");
+
+    var temFiltro = filtros.type || filtros.q || filtros.only;
+
+    var html = "";
+    html += cabecalhoDeSecao("Armas", "Catalogo de armas",
+      "Stats das armas, slots de peca e o percentual estimado das pecas mais usadas pelos jogadores.");
+    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Armas" }]);
+
+    html += '<div class="toolbar">' +
       '<span class="tb-label">Filtros</span>' +
-      '<select id="w-type" aria-label="Tipo">' + '<option value="">Todos os tipos</option>' +
-        TYPES.filter(function (t) { return D.weapons.some(function (w) { return w.t === t; }); })
-          .map(function (t) { return '<option value="' + t + '"' + (q.type === t ? " selected" : "") + ">" + t + "</option>"; }).join("") +
-      "</select>" +
+      '<select id="w-type" aria-label="Tipo"><option value="">Todos os tipos</option>' + opcoesDeTipo + "</select>" +
       '<div class="divider"></div>' +
-      '<input class="tb-input" id="w-q" type="search" placeholder="Buscar arma..." value="' + esc(q.q || "") + '" aria-label="Buscar arma">' +
-      '<span class="tb-count"><b>' + list.length + "</b> de " + D.weapons.length + "</span>" +
-      ((q.type || q.q || q.only) ? '<a class="btn" href="#/armas">Limpar</a>' : "") +
+      '<input class="tb-input" id="w-q" type="search" placeholder="Buscar arma..." value="' +
+        escapar(filtros.q || "") + '" aria-label="Buscar arma">' +
+      '<span class="tb-count"><b>' + lista.length + "</b> de " + DADOS.weapons.length + "</span>" +
+      (temFiltro ? '<a class="btn" href="#/armas">Limpar</a>' : "") +
     "</div>";
 
-    h += notice("<b>Percentuais de pecas sao estimativas.</b> Nenhuma fonte publica mede o uso de attachments em R6. " +
-      "Os numeros vem de consenso entre guias, Reddit e jogadores profissionais, com confianca indicada por item. " +
-      "Os stats das armas vem de datasets cross-checkados contra a wiki.", "info");
+    html += aviso("<b>Percentuais de pecas sao estimativas.</b> Nenhuma fonte publica mede o uso de pecas em R6. " +
+      "Os numeros vem do consenso entre guias, Reddit e jogadores profissionais, com confianca indicada por item. " +
+      "Os dados de dano das armas vem das notas oficiais da Ubisoft.", "info");
 
-    h += '<div class="grid-weapons">' + list.map(wCard).join("") + "</div>";
+    html += '<div class="grid-weapons">' + lista.map(cartaoDaArma).join("") + "</div>";
 
-    /* meta global */
-    h += secHead("Referencia", "Meta global de pecas", "Distribuicao estimada de uso em todas as armas do jogo.");
-    h += '<div class="panes">' + metaGlobalPane("cano", "Cano / Boca") + metaGlobalPane("grip", "Grip") +
-      metaGlobalPane("mira", "Mira / Luneta") + metaGlobalPane("under", "Sousbarrel") + "</div>";
+    /* Meta global, um painel por slot */
+    html += cabecalhoDeSecao("Referencia", "Meta global de pecas", "Distribuicao estimada de uso em todas as armas do jogo.");
+    html += '<div class="panes">' +
+      painelDaMetaGlobal("cano", "Cano / Boca") +
+      painelDaMetaGlobal("grip", "Grip") +
+      painelDaMetaGlobal("mira", "Mira / Luneta") +
+      painelDaMetaGlobal("under", "Sousbarrel") +
+    "</div>";
 
-    /* efeitos */
-    h += secHead("Referencia", "Efeito de cada peca", "Valores medidos e documentados pela wiki de attachments.");
-    h += '<div class="tbl-scroll"><table><thead><tr><th>Peca</th><th>Slot</th><th>Efeito</th><th>Confianca do uso</th></tr></thead><tbody>';
-    Object.keys(D.attachmentEffects).forEach(function (k) {
-      var e = D.attachmentEffects[k];
-      h += "<tr><td><b>" + esc(k) + "</b></td><td>" + esc(slotLabel(e.slot)) + "</td><td>" + esc(e.d) + "</td><td>" + confTag(e.conf) + "</td></tr>";
+    /* Tabela com o efeito de cada peca */
+    html += cabecalhoDeSecao("Referencia", "Efeito de cada peca", "Valores medidos e documentados pela wiki de attachments.");
+    html += '<div class="tbl-scroll"><table><thead><tr><th>Peca</th><th>Slot</th><th>Efeito</th><th>Confianca do uso</th></tr></thead><tbody>';
+    Object.keys(DADOS.attachmentEffects).forEach(function (nomeDaPeca) {
+      var peca = DADOS.attachmentEffects[nomeDaPeca];
+      html += "<tr><td><b>" + escapar(nomeDaPeca) + "</b></td><td>" + escapar(nomeDoSlot(peca.slot)) +
+        "</td><td>" + escapar(peca.description) + "</td><td>" + etiquetaConfianca(peca.confidence) + "</td></tr>";
     });
-    h += "</tbody></table></div>";
-    return h;
-  }
-  function metaGlobalPane(key, label) {
-    var rows = D.metaGlobal[key] || [];
-    var h = '<div class="pane"><h3>' + esc(label) + "</h3>";
-    rows.forEach(function (r) {
-      var pct = parseInt(r.p, 10);
-      h += '<div class="bar"><div class="bar-top"><b>' + esc(r.n) + " " + confTag(r.conf) + "</b><span>" + esc(r.p) + "</span></div>" +
-        '<div class="bar-track"><div class="bar-fill" style="width:' + (isNaN(pct) ? 0 : Math.min(100, pct)) + '%"></div></div>' +
-        '<div class="small muted" style="margin-top:3px">' + esc(r.d) + "</div></div>";
-    });
-    return h + "</div>";
+    html += "</tbody></table></div>";
+
+    return html;
   }
 
-  function viewWeapon(name) {
-    var w = wByName(name);
-    if (!w) return '<div class="empty-state"><b>Arma nao encontrada</b><a href="#/armas">Voltar ao catalogo</a></div>';
-    var users = D.weaponOperators(w.n);
+  /* Um painel da meta global (cano, grip, mira ou under). */
+  function painelDaMetaGlobal(slot, titulo) {
+    var linhas = DADOS.metaGlobal[slot] || [];
+    var html = '<div class="pane"><h3>' + escapar(titulo) + "</h3>";
 
-    var h = "";
-    h += crumbs([{ label: "Inicio", href: "#/" }, { label: "Armas", href: "#/armas" }, { label: w.n }]);
-    h += '<section class="detail-hero" style="border-left-color:var(--gold)">' +
-      '<div class="avatar">' + esc(initials(w.n)) + "</div>" +
+    linhas.forEach(function (linha) {
+      var percentual = parseInt(linha.percent, 10);
+      var largura = isNaN(percentual) ? 0 : Math.min(100, percentual);
+      html += '<div class="bar"><div class="bar-top"><b>' + escapar(linha.name) + " " +
+        etiquetaConfianca(linha.confidence) + '</b><span>' + escapar(linha.percent) + "</span></div>" +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + largura + '%"></div></div>' +
+        '<div class="small muted" style="margin-top:3px">' + escapar(linha.description) + "</div></div>";
+    });
+
+    return html + "</div>";
+  }
+
+  /* -----------------------------------------------------------------
+     DETALHE DE UMA ARMA
+     ----------------------------------------------------------------- */
+  function paginaArma(nome) {
+    var arma = acharArma(nome);
+    if (!arma) {
+      return '<div class="empty-state"><b>Arma nao encontrada</b><a href="#/armas">Voltar ao catalogo</a></div>';
+    }
+
+    var operadoresQueUsam = DADOS.weaponOperators(arma.name);
+    var html = "";
+
+    html += migalhas([
+      { texto: "Inicio", link: "#/" },
+      { texto: "Armas", link: "#/armas" },
+      { texto: arma.name }
+    ]);
+
+    html += '<section class="detail-hero" style="border-left-color:var(--gold)">' +
+      '<div class="avatar">' + escapar(iniciais(arma.name)) + "</div>" +
       "<div>" +
-        '<span class="eyebrow">' + esc(w.t) + "</span>" +
-        "<h1>" + esc(w.n) + "</h1>" +
+        '<span class="eyebrow">' + escapar(arma.type) + "</span>" +
+        "<h1>" + escapar(arma.name) + "</h1>" +
         '<div class="badges">' +
-          '<span class="badge">dano <b>' + esc(w.dmg) + "</b></span>" +
-          '<span class="badge">' + esc(w.rpm) + " <b>rpm</b></span>" +
-          '<span class="badge">carregador <b>' + esc(w.mag) + "</b></span>" +
-          '<span class="badge">slots <b>' + w.slots.length + "</b></span>" +
-          '<span class="badge">' + users.length + " <b>operadores</b></span>" +
+          '<span class="badge">dano <b>' + escapar(arma.damage) + "</b></span>" +
+          '<span class="badge">' + escapar(arma.rpm) + " <b>rpm</b></span>" +
+          '<span class="badge">carregador <b>' + escapar(arma.magazine) + "</b></span>" +
+          '<span class="badge">slots <b>' + arma.slots.length + "</b></span>" +
+          '<span class="badge">' + operadoresQueUsam.length + " <b>operadores</b></span>" +
         "</div>" +
-        (w.note ? '<p class="muted" style="max-width:70ch">' + esc(w.note) + "</p>" : "") +
+        (arma.note ? '<p class="muted" style="max-width:70ch">' + escapar(arma.note) + "</p>" : "") +
       "</div></section>";
 
-    h += '<div class="panes">';
-    h += '<div class="pane"><h3>Meta de pecas por slot</h3>' +
-      (w.meta ? metaBlocks(w) : '<p class="muted">Nao ha dados de meta de pecas medidos ou consenso para esta arma. ' +
+    html += '<div class="panes">';
+
+    html += '<div class="pane"><h3>Meta de pecas por slot</h3>' +
+      (arma.meta ? barrasDaMeta(arma) : '<p class="muted">Nao ha dados de meta de pecas medidos ou consenso para esta arma. ' +
         "Verifique a wiki para os slots e efeitos disponiveis.</p>") + "</div>";
 
-    h += '<div class="pane"><h3>Slots disponiveis</h3><ul class="sec-list">';
-    if (!w.slots.length) h += '<li><span class="g-ico">-</span><div><b>Sem slots</b><small>Esta arma nao aceita pecas.</small></div></li>';
-    w.slots.forEach(function (s) {
-      h += "<li><span class='g-ico'>" + esc(s.charAt(0).toUpperCase()) + "</span><div><b>" + esc(slotLabel(s)) + "</b></div></li>";
-    });
-    h += "</ul></div>";
-
-    h += '<div class="pane full"><h3>Operadores que usam</h3>';
-    if (!users.length) h += '<p class="muted">Nenhum operador mapeado.</p>';
-    else {
-      h += '<div class="grid-ops">' + users.map(opCard).join("") + "</div>";
+    html += '<div class="pane"><h3>Slots disponiveis</h3><ul class="sec-list">';
+    if (!arma.slots.length) {
+      html += '<li><span class="g-ico">-</span><div><b>Sem slots</b><small>Esta arma nao aceita pecas.</small></div></li>';
     }
-    h += "</div>";
-    h += "</div>";
-    return h;
+    arma.slots.forEach(function (slot) {
+      html += "<li><span class='g-ico'>" + escapar(slot.charAt(0).toUpperCase()) + "</span><div><b>" +
+        escapar(nomeDoSlot(slot)) + "</b></div></li>";
+    });
+    html += "</ul></div>";
+
+    html += '<div class="pane full"><h3>Operadores que usam</h3>';
+    if (!operadoresQueUsam.length) {
+      html += '<p class="muted">Nenhum operador mapeado.</p>';
+    } else {
+      html += '<div class="grid-ops">' + operadoresQueUsam.map(cartaoDoOperador).join("") + "</div>";
+    }
+    html += "</div>";
+
+    html += "</div>";
+    return html;
   }
 
-  /* ------------------------------------------------ noticias */
-  function newsList(items, compact) {
-    if (!items.length) return '<div class="empty-state"><b>Nada por aqui</b></div>';
-    return '<div class="news-list">' + items.map(function (n) {
-      var d = String(n.date).split("-");
+  /* -----------------------------------------------------------------
+     NOTICIAS
+     ----------------------------------------------------------------- */
+
+  /* A lista de notícias. Com "resumido = true", corta o texto em 2 frases. */
+  function listaDeNoticias(itens, resumido) {
+    if (!itens.length) return '<div class="empty-state"><b>Nada por aqui</b></div>';
+
+    return '<div class="news-list">' + itens.map(function (noticia) {
+      var partesDaData = String(noticia.date).split("-");
+      var texto = resumido ? noticia.summary.split(". ").slice(0, 2).join(". ") + "." : noticia.summary;
+
       return '<article class="news-card">' +
-        '<div class="news-date"><b>' + Number(d[2]) + "</b><span>" + MESES[Number(d[1]) - 1] + " " + d[0] + "</span></div>" +
+        '<div class="news-date"><b>' + Number(partesDaData[2]) + "</b><span>" +
+          NOMES_DOS_MESES[Number(partesDaData[1]) - 1] + " " + partesDaData[0] + "</span></div>" +
         "<div>" +
-          "<h3>" + esc(n.title) + "</h3>" +
-          (compact ? '<p>' + esc(n.summary.split(". ").slice(0, 2).join(". ") + ".") + "</p>" : "<p>" + esc(n.summary) + "</p>") +
+          "<h3>" + escapar(noticia.title) + "</h3>" +
+          "<p>" + escapar(texto) + "</p>" +
           '<div class="news-meta">' +
-            '<span class="pill ' + esc(n.category) + '">' + esc(catLabel(n.category)) + "</span>" +
-            (n.status && n.status !== "live" ? '<span class="pill ' + esc(n.status) + '">' + esc(statusLabel(n.status)) + "</span>" : "") +
-            (n.sourceUrl ? '<a class="src-link" href="' + esc(n.sourceUrl) + '" target="_blank" rel="noopener">fonte oficial</a>' : "") +
+            '<span class="pill ' + escapar(noticia.category) + '">' + escapar(nomeDaCategoria(noticia.category)) + "</span>" +
+            (noticia.status && noticia.status !== "live"
+              ? '<span class="pill ' + escapar(noticia.status) + '">' + escapar(nomeDoStatus(noticia.status)) + "</span>"
+              : "") +
+            (noticia.sourceUrl
+              ? '<a class="src-link" href="' + escapar(noticia.sourceUrl) + '" target="_blank" rel="noopener">fonte oficial</a>'
+              : "") +
           "</div>" +
         "</div></article>";
     }).join("") + "</div>";
   }
 
-  function viewNews(q) {
-    var tab = q.tab === "balanceamentos" ? "balanceamentos" : "noticias";
-    var items = (D.news.items || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
-    var cats = [];
-    items.forEach(function (n) { if (cats.indexOf(n.category) === -1) cats.push(n.category); });
-    cats.sort();
-    if (q.cat) items = items.filter(function (n) { return n.category === q.cat; });
+  function paginaNoticias(filtros) {
+    var aba = filtros.tab === "balanceamentos" ? "balanceamentos" : "noticias";
+    var itens = (DADOS.news.items || []).slice().sort(function (a, b) {
+      return a.date < b.date ? 1 : -1;
+    });
 
-    var h = "";
-    h += secHead("Noticias", "Noticias e balanceamentos",
+    /* Categorias que existem nas notícias */
+    var categorias = [];
+    itens.forEach(function (noticia) {
+      if (categorias.indexOf(noticia.category) === -1) categorias.push(noticia.category);
+    });
+    categorias.sort();
+
+    if (filtros.cat) {
+      itens = itens.filter(function (noticia) { return noticia.category === filtros.cat; });
+    }
+
+    var html = "";
+    html += cabecalhoDeSecao("Noticias", "Noticias e balanceamentos",
       "Patch notes oficiais da Ubisoft, anuncios de temporada, eventos in-game e resultados de esports.");
-    h += crumbs([{ label: "Inicio", href: "#/" }, { label: "Noticias" }]);
-    h += '<div class="tabs">' +
-      '<button class="tab' + (tab === "noticias" ? " on" : "") + '" data-tab="noticias">Noticias</button>' +
-      '<button class="tab' + (tab === "balanceamentos" ? " on" : "") + '" data-tab="balanceamentos">Balanceamentos</button>' +
+    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Noticias" }]);
+
+    html += '<div class="tabs">' +
+      '<button class="tab' + (aba === "noticias" ? " on" : "") + '" data-tab="noticias">Noticias</button>' +
+      '<button class="tab' + (aba === "balanceamentos" ? " on" : "") + '" data-tab="balanceamentos">Balanceamentos</button>' +
     "</div>";
 
-    if (tab === "noticias") {
-      h += '<div class="toolbar"><span class="tb-label">Categorias</span>' +
-        '<a class="chip' + (!q.cat ? " on" : "") + '" href="#/noticias?tab=noticias">Todas</a>' +
-        cats.map(function (c) {
-          return '<a class="chip' + (q.cat === c ? " on" : "") + '" href="#/noticias?tab=noticias&cat=' +
-            encodeURIComponent(c) + '">' + esc(catLabel(c)) + "</a>";
+    if (aba === "noticias") {
+      html += '<div class="toolbar"><span class="tb-label">Categorias</span>' +
+        '<a class="chip' + (!filtros.cat ? " on" : "") + '" href="#/noticias?tab=noticias">Todas</a>' +
+        categorias.map(function (categoria) {
+          return '<a class="chip' + (filtros.cat === categoria ? " on" : "") +
+            '" href="#/noticias?tab=noticias&cat=' + encodeURIComponent(categoria) + '">' +
+            escapar(nomeDaCategoria(categoria)) + "</a>";
         }).join("") +
-        '<span class="tb-count"><b>' + items.length + "</b> itens</span></div>";
-      h += newsList(items);
-      h += notice("Conteudo resumido de fontes oficiais da Ubisoft e de sites de esports. " +
+        '<span class="tb-count"><b>' + itens.length + "</b> itens</span></div>";
+
+      html += listaDeNoticias(itens);
+      html += aviso("Conteudo resumido de fontes oficiais da Ubisoft e de sites de esports. " +
         "Clique em &ldquo;fonte oficial&rdquo; para o anuncio original.", "info");
     } else {
-      h += patchList();
+      html += listaDePatches();
     }
-    return h;
+
+    return html;
   }
 
-  function patchList() {
-    var ps = D.patchnotes;
-    var h = notice("<b>Fonte:</b> notas de patch oficiais da Ubisoft. " +
+  /* A aba de balanceamentos: todas as patch notes, uma dobra dentro da outra. */
+  function listaDePatches() {
+    var patches = DADOS.patchnotes;
+    var html = aviso("<b>Fonte:</b> notas de patch oficiais da Ubisoft. " +
       "Expandir um patch mostra destaques, novidades, tabela de balanceamento e correcoes.", "info");
-    h += '<div class="toolbar">' +
+
+    html += '<div class="toolbar">' +
       '<span class="tb-label">Legenda</span>' +
       '<span class="pill buff">Buff</span><span class="pill nerf">Nerf</span><span class="pill mixed">Misto</span>' +
-      '<span class="tb-count"><b>' + ps.patches.length + "</b> patches mapeados</span>" +
+      '<span class="tb-count"><b>' + patches.patches.length + "</b> patches mapeados</span>" +
       '<button class="btn" id="expand-all">Expandir tudo</button></div>';
-    h += ps.patches.map(function (p) {
-      var bal = p.balance || [];
-      var hl = p.highlights || [];
-      var bf = p.bugFixes || {};
-      var bfCount = (bf.gameplay || []).length + (bf.ui || []).length;
-      var b = "";
 
-      if (hl.length) {
-        b += "<h4>Destaques</h4><ul>" + hl.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
-      }
-      if ((p.newOperators || []).length) {
-        b += "<h4>Operadores novos</h4><ul>" +
-          p.newOperators.map(function (x) { return "<li><b>" + esc(x) + "</b></li>"; }).join("") + "</ul>";
-      }
-      if ((p.newMaps || []).length) {
-        b += "<h4>Mapas</h4><ul>" +
-          p.newMaps.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
-      }
-      if (bal.length) {
-        b += "<h4>Mudancas de balanceamento (" + bal.length + ")</h4>" +
-          '<div class="tbl-scroll"><table><thead><tr>' +
-          "<th>Alvo</th><th>Gadget / arma</th><th>Mudanca</th><th>Direcao</th></tr></thead><tbody>" +
-          bal.map(function (x) {
-            return "<tr><td><b>" + esc(x.operator || x.target || "-") + "</b></td><td>" + esc(x.gadget || "-") +
-              "</td><td>" + esc(x.change) + "</td><td>" + directionPill(x.direction) + "</td></tr>";
-          }).join("") +
-          "</tbody></table></div>";
-      } else {
-        b += '<p class="small muted" style="margin:10px 0 0">Esta nota nao trouxe mudancas de balanceamento de operador, gadget ou arma.</p>';
-      }
-      if (bfCount) {
-        b += "<h4>Correcoes (" + bfCount + ")</h4><details><summary>Ver correcoes</summary><ul>" +
-          (bf.gameplay || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") +
-          (bf.ui || []).map(function (x) { return '<li class="muted">' + esc(x) + "</li>"; }).join("") +
-          "</ul></details>";
-      }
-      b += '<p class="small" style="margin-top:14px"><a class="src-link" href="' + esc(p.sourceUrl) +
-        '" target="_blank" rel="noopener">patch notes oficiais</a></p>';
-
-      return '<div class="patch" data-patch="' + esc(p.version) + '">' +
-        '<button class="patch-head" data-ptoggle>' +
-          '<span class="patch-ver">' + esc(p.version) + "</span>" +
-          '<span><span class="patch-seen">' + esc(p.label) + " &middot; " + esc(p.type) + " &middot; " + esc(fmtDate(p.date)) + "</span>" +
-          '<div class="patch-title">' + esc(p.headline || "") + "</div></span>" +
-          '<span class="sp"></span>' +
-          '<span class="patch-seen">' + bal.length + " mudancas</span>" +
-          '<span class="arrow">&#9656;</span>' +
-        "</button>" +
-        '<div class="patch-body">' + b + "</div>" +
-      "</div>";
+    html += patches.patches.map(function (patch) {
+      return caixaDoPatch(patch);
     }).join("");
-    return h;
+
+    return html;
   }
 
-  /* ------------------------------------------------ rankings */
-  /* Estado da busca opcional por API configurada em config.js.
-     Vazio por padrao: o site usa apenas o snapshot local.                    */
-  var live = { on: !!(CFG.rankingApiUrl), loading: false, loaded: false, error: "" };
+  /* Monta um patch. A parte de dentro fica escondida até clicar. */
+  function caixaDoPatch(patch) {
+    var mudancas = patch.balance || [];
+    var destaques = patch.highlights || [];
+    var correcoes = patch.bugFixes || {};
+    var totalDeCorrecoes = (correcoes.gameplay || []).length + (correcoes.ui || []).length;
+    var dentro = "";
 
-  function loadLiveRankings() {
-    if (!live.on || live.loading || live.loaded) return;
-    live.loading = true;
-    var opt = { headers: CFG.rankingApiHeaders || {} };
-    fetch(CFG.rankingApiUrl, opt)
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(function (j) {
-        if (j && Array.isArray(j.teams) && j.teams.length) D.rankings.teams = j.teams;
-        if (j && Array.isArray(j.solo) && j.solo.length) D.rankings.solo = j.solo;
-        live.loaded = true;
-        if (parseHash().parts[0] === "rankings") render();
+    if (destaques.length) {
+      dentro += "<h4>Destaques</h4><ul>" +
+        destaques.map(function (linha) { return "<li>" + escapar(linha) + "</li>"; }).join("") + "</ul>";
+    }
+
+    if ((patch.newOperators || []).length) {
+      dentro += "<h4>Operadores novos</h4><ul>" +
+        patch.newOperators.map(function (nome) { return "<li><b>" + escapar(nome) + "</b></li>"; }).join("") + "</ul>";
+    }
+
+    if ((patch.newMaps || []).length) {
+      dentro += "<h4>Mapas</h4><ul>" +
+        patch.newMaps.map(function (nome) { return "<li>" + escapar(nome) + "</li>"; }).join("") + "</ul>";
+    }
+
+    if (mudancas.length) {
+      dentro += "<h4>Mudancas de balanceamento (" + mudancas.length + ")</h4>" +
+        '<div class="tbl-scroll"><table><thead><tr>' +
+        "<th>Alvo</th><th>Gadget / arma</th><th>Mudanca</th><th>Direcao</th></tr></thead><tbody>" +
+        mudancas.map(function (mudanca) {
+          return "<tr><td><b>" + escapar(mudanca.operator || mudanca.target || "-") + "</b></td><td>" +
+            escapar(mudanca.gadget || "-") + "</td><td>" + escapar(mudanca.change) + "</td><td>" +
+            etiquetaDirecao(mudanca.direction) + "</td></tr>";
+        }).join("") +
+        "</tbody></table></div>";
+    } else {
+      dentro += '<p class="small muted" style="margin:10px 0 0">Esta nota nao trouxe mudancas de balanceamento de operador, gadget ou arma.</p>';
+    }
+
+    if (totalDeCorrecoes) {
+      dentro += "<h4>Correcoes (" + totalDeCorrecoes + ")</h4><details><summary>Ver correcoes</summary><ul>" +
+        (correcoes.gameplay || []).map(function (linha) { return "<li>" + escapar(linha) + "</li>"; }).join("") +
+        (correcoes.ui || []).map(function (linha) { return '<li class="muted">' + escapar(linha) + "</li>"; }).join("") +
+        "</ul></details>";
+    }
+
+    dentro += '<p class="small" style="margin-top:14px"><a class="src-link" href="' + escapar(patch.sourceUrl) +
+      '" target="_blank" rel="noopener">patch notes oficiais</a></p>';
+
+    return '<div class="patch" data-patch="' + escapar(patch.version) + '">' +
+      '<button class="patch-head" data-ptoggle>' +
+        '<span class="patch-ver">' + escapar(patch.version) + "</span>" +
+        "<span><span class='patch-seen'>" + escapar(patch.label) + " &middot; " + escapar(patch.type) +
+          " &middot; " + escapar(formatarData(patch.date)) + "</span>" +
+        '<div class="patch-title">' + escapar(patch.headline || "") + "</div></span>" +
+        '<span class="sp"></span>' +
+        '<span class="patch-seen">' + mudancas.length + " mudancas</span>" +
+        '<span class="arrow">&#9656;</span>' +
+      "</button>" +
+      '<div class="patch-body">' + dentro + "</div>" +
+    "</div>";
+  }
+
+  /* -----------------------------------------------------------------
+     RANKINGS
+     ----------------------------------------------------------------- */
+
+  /* Estado da API opcional de ranking. Vazio = usa a lista do arquivo. */
+  var estadoDaApi = {
+    ligada: !!CONFIG.rankingApiUrl,
+    carregando: false,
+    carregada: false,
+    erro: ""
+  };
+
+  /* Tenta buscar o ranking na API. Se falhar, continua com a lista local. */
+  function carregarRankingDaApi() {
+    if (!estadoDaApi.ligada || estadoDaApi.carregando || estadoDaApi.carregada) return;
+    estadoDaApi.carregando = true;
+
+    fetch(CONFIG.rankingApiUrl, { headers: CONFIG.rankingApiHeaders || {} })
+      .then(function (resposta) {
+        if (!resposta.ok) throw new Error("HTTP " + resposta.status);
+        return resposta.json();
       })
-      .catch(function (e) { live.error = String(e && e.message || e); })
-      .then(function () { live.loading = false; });
+      .then(function (dados) {
+        if (dados && Array.isArray(dados.teams) && dados.teams.length) DADOS.rankings.teams = dados.teams;
+        if (dados && Array.isArray(dados.solo) && dados.solo.length) DADOS.rankings.solo = dados.solo;
+        estadoDaApi.carregada = true;
+        if (lerUrl().pedacos[0] === "rankings") desenharPagina();
+      })
+      .catch(function (erro) {
+        estadoDaApi.erro = String(erro && erro.message || erro);
+      })
+      .then(function () {
+        estadoDaApi.carregando = false;
+      });
   }
 
-  function liveBadge() {
-    if (!live.on) return '<span class="badge">fonte: <b>snapshot local</b> (' + esc(fmtDate(CFG.snapshot)) + ")</span>";
-    if (live.loaded) return '<span class="badge gold">fonte: <b>API ao vivo</b></span>';
-    if (live.loading) return '<span class="badge">fonte: <b>consultando API...</b></span>';
-    return '<span class="badge">fonte: <b>snapshot local</b> (API indisponivel: ' + esc(live.error || "sem conexao") + ")</span>";
+  /* A etiqueta que mostra de onde veio o ranking. */
+  function etiquetaDaOrigem() {
+    if (!estadoDaApi.ligada) {
+      return '<span class="badge">fonte: <b>snapshot local</b> (' + escapar(formatarData(CONFIG.snapshot)) + ")</span>";
+    }
+    if (estadoDaApi.carregada) return '<span class="badge gold">fonte: <b>API ao vivo</b></span>';
+    if (estadoDaApi.carregando) return '<span class="badge">fonte: <b>consultando API...</b></span>';
+    return '<span class="badge">fonte: <b>snapshot local</b> (API indisponivel: ' +
+      escapar(estadoDaApi.erro || "sem conexao") + ")</span>";
   }
 
-  function viewRankings(q) {
-    var tab = q.tab === "solo" ? "solo" : "times";
-    var rk = D.rankings;
-    var h = "";
-    h += secHead("Rankings", "Times e jogadores", "Ranking oficial, com fontes e data de referencia.");
-    h += crumbs([{ label: "Inicio", href: "#/" }, { label: "Rankings" }]);
-    h += '<div class="toolbar"><span class="tb-label">Origem dos dados</span>' + liveBadge() +
-      '<span class="tb-count">snapshot ' + esc(fmtDate(rk.snapshot)) + "</span></div>";
-    h += '<div class="tabs">' +
-      '<button class="tab' + (tab === "times" ? " on" : "") + '" data-tab="times">Times</button>' +
-      '<button class="tab' + (tab === "solo" ? " on" : "") + '" data-tab="solo">Solo / jogadores</button>' +
+  function paginaRankings(filtros) {
+    var aba = filtros.tab === "solo" ? "solo" : "times";
+    var ranking = DADOS.rankings;
+    var html = "";
+
+    html += cabecalhoDeSecao("Rankings", "Times e jogadores", "Ranking oficial, com fontes e data de referencia.");
+    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Rankings" }]);
+
+    html += '<div class="toolbar"><span class="tb-label">Origem dos dados</span>' + etiquetaDaOrigem() +
+      '<span class="tb-count">snapshot ' + escapar(formatarData(ranking.snapshot)) + "</span></div>";
+
+    html += '<div class="tabs">' +
+      '<button class="tab' + (aba === "times" ? " on" : "") + '" data-tab="times">Times</button>' +
+      '<button class="tab' + (aba === "solo" ? " on" : "") + '" data-tab="solo">Solo / jogadores</button>' +
     "</div>";
 
-    if (tab === "times") {
-      h += notice("<b>Importante:</b> " + esc(rk.disclaimer.teams), "info");
-      h += '<div class="tbl-scroll"><table><thead><tr>' +
+    if (aba === "times") {
+      html += aviso("<b>Importante:</b> " + escapar(ranking.disclaimer.teams), "info");
+
+      /* Tabela dos times principais */
+      html += '<div class="tbl-scroll"><table><thead><tr>' +
         "<th>#</th><th>Time</th><th>Regiao</th><th>Elenco</th><th>Titulos</th><th>Rolling 12m</th><th>Pts SI</th>" +
         "</tr></thead><tbody>";
-      rk.teams.forEach(function (t) {
-        h += '<tr class="rank-medals rank-' + t.pos + '"><td class="num"><b>' + t.pos + "</b></td>" +
-          '<td><div class="team-cell"><span class="team-logo">' + esc(initials(t.name)) + "</span>" +
-          '<div><div class="tn"><a href="#">' + esc(t.name) + "</a></div>" +
-          (t.coach && t.coach !== "-" ? '<div class="tr">coach ' + esc(t.coach) + "</div>" : "") + "</div></div>" +
-          (t.note ? '<div class="small muted" style="margin-top:6px">' + esc(t.note) + "</div>" : "") + "</td>" +
-          "<td>" + esc(t.region) + "</td>" +
-          '<td class="small">' + esc(t.team) + "</td>" +
-          '<td><ul class="titles">' + (t.titles || []).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></td>" +
-          "<td><b>#" + t.rolling + "</b> <span class='muted small'>" + esc(t.rollingPts) + " pts</span></td>" +
-          "<td><b>" + esc(t.si) + "</b></td></tr>";
+      ranking.teams.forEach(function (time) {
+        html += '<tr class="rank-medals rank-' + time.position + '"><td class="num"><b>' + time.position + "</b></td>" +
+          '<td><div class="team-cell"><span class="team-logo">' + escapar(iniciais(time.name)) + "</span>" +
+          '<div><div class="tn"><a href="#">' + escapar(time.name) + "</a></div>" +
+          (time.coach && time.coach !== "-" ? '<div class="tr">coach ' + escapar(time.coach) + "</div>" : "") +
+          "</div></div>" +
+          (time.note ? '<div class="small muted" style="margin-top:6px">' + escapar(time.note) + "</div>" : "") + "</td>" +
+          "<td>" + escapar(time.region) + "</td>" +
+          '<td class="small">' + escapar(time.team) + "</td>" +
+          '<td><ul class="titles">' + (time.titles || []).map(function (titulo) {
+            return "<li>" + escapar(titulo) + "</li>";
+          }).join("") + "</ul></td>" +
+          "<td><b>#" + time.rollingPosition + "</b> <span class='muted small'>" + escapar(time.rollingPoints) + " pts</span></td>" +
+          "<td><b>" + escapar(time.siPoints) + "</b></td></tr>";
       });
-      h += "</tbody></table></div>";
+      html += "</tbody></table></div>";
 
-      h += secHead("Referencias", "Outros times no ranking", "Posicoes no ranking rolling de 12 meses e no ranking de pontos do Six Invitational.");
-      h += '<div class="tbl-scroll"><table><thead><tr><th>Time</th><th>Rolling 12m</th><th>Pos. pontos SI</th><th>Obs.</th></tr></thead><tbody>';
-      rk.teamsMore.forEach(function (t) {
-        h += "<tr><td><b>" + esc(t.name) + "</b></td><td>#" + esc(t.rolling) + "</td><td>#" + esc(t.si) + "</td>" +
-          '<td class="small muted">' + esc(t.note || "") + "</td></tr>";
+      /* Tabela dos outros times */
+      html += cabecalhoDeSecao("Referencias", "Outros times no ranking",
+        "Posicoes no ranking rolling de 12 meses e no ranking de pontos do Six Invitational.");
+      html += '<div class="tbl-scroll"><table><thead><tr>' +
+        "<th>Time</th><th>Rolling 12m</th><th>Pos. pontos SI</th><th>Obs.</th></tr></thead><tbody>";
+      ranking.teamsMore.forEach(function (time) {
+        html += "<tr><td><b>" + escapar(time.name) + "</b></td><td>#" + escapar(time.rollingPosition) +
+          "</td><td>#" + escapar(time.siPosition) + "</td>" +
+          '<td class="small muted">' + escapar(time.note || "") + "</td></tr>";
       });
-      h += "</tbody></table></div>";
+      html += "</tbody></table></div>";
 
-      h += secHead("Circuito", "Proximos eventos e contexto");
-      h += '<div class="home-grid">' +
-        '<div class="pane"><h3>Proximo Major</h3><p class="lead-big">' + esc(rk.circuit.majorNext.name) + "</p>" +
-          "<p>" + esc(rk.circuit.majorNext.date) + " &middot; " + esc(rk.circuit.majorNext.place) + " &middot; " +
-          esc(rk.circuit.majorNext.teams) + " times</p>" +
-          '<p class="small muted">' + esc(rk.circuit.majorNext.note) + "</p></div>" +
-        '<div class="pane"><h3>Proximo Six Invitational</h3><p class="lead-big">' + esc(rk.circuit.siNext.name) + "</p>" +
-          "<p>" + esc(rk.circuit.siNext.date) + " &middot; " + esc(rk.circuit.siNext.place) + "</p>" +
-          '<p class="small muted">Qualificados ate agora: <b>' + esc(rk.circuit.qualifiedSoFar.join(", ")) + "</b>. " +
-          esc(rk.circuit.siNext.note) + "</p></div>" +
-        '<div class="pane"><h3>Ranked 3.0</h3><p class="lead-big">' + esc(rk.circuit.ranked.name) + "</p>" +
-          "<p>Desde " + esc(fmtDate(rk.circuit.ranked.since)) + " (" + esc(rk.circuit.ranked.season) + ")</p>" +
-          '<p class="small muted">' + esc(rk.circuit.ranked.note) + "</p></div>" +
+      /* Contexto dos próximos eventos */
+      html += cabecalhoDeSecao("Circuito", "Proximos eventos e contexto");
+      html += '<div class="home-grid">' +
+        '<div class="pane"><h3>Proximo Major</h3><p class="lead-big">' + escapar(ranking.circuit.majorNext.name) + "</p>" +
+          "<p>" + escapar(ranking.circuit.majorNext.date) + " &middot; " + escapar(ranking.circuit.majorNext.place) + " &middot; " +
+          escapar(ranking.circuit.majorNext.teams) + " times</p>" +
+          '<p class="small muted">' + escapar(ranking.circuit.majorNext.note) + "</p></div>" +
+        '<div class="pane"><h3>Proximo Six Invitational</h3><p class="lead-big">' + escapar(ranking.circuit.siNext.name) + "</p>" +
+          "<p>" + escapar(ranking.circuit.siNext.date) + " &middot; " + escapar(ranking.circuit.siNext.place) + "</p>" +
+          '<p class="small muted">Qualificados ate agora: <b>' + escapar(ranking.circuit.qualifiedSoFar.join(", ")) + "</b>. " +
+          escapar(ranking.circuit.siNext.note) + "</p></div>" +
+        '<div class="pane"><h3>Ranked 3.0</h3><p class="lead-big">' + escapar(ranking.circuit.ranked.name) + "</p>" +
+          "<p>Desde " + escapar(formatarData(ranking.circuit.ranked.since)) + " (" + escapar(ranking.circuit.ranked.season) + ")</p>" +
+          '<p class="small muted">' + escapar(ranking.circuit.ranked.note) + "</p></div>" +
       "</div>";
     } else {
-      h += notice("<b>Aviso honesto:</b> " + esc(rk.disclaimer.solo), "info");
-      h += '<div class="expand-note" style="margin-bottom:18px">' +
+      html += aviso("<b>Aviso honesto:</b> " + escapar(ranking.disclaimer.solo), "info");
+
+      html += '<div class="expand-note" style="margin-bottom:18px">' +
         "Se voce configurar <code class='mono'>rankingApiUrl</code> em " +
         "<code class='mono'>assets/js/config.js</code>, esta aba tenta buscar um endpoint JSON ao vivo " +
         "(formato <code class='mono'>{ teams: [...], solo: [...] }</code>) e sobe com os dados fresh; " +
-        "se o endpoint falhar, o snapshot local abaixo e mantido. Status atual: " + liveBadge() + ". " +
+        "se o endpoint falhar, o snapshot local abaixo e mantido. Status atual: " + etiquetaDaOrigem() + ". " +
         "Sem API configurada, o site mostra nomes e titulos reais verificados, sem inventar MMR." +
       "</div>";
-      h += '<div class="tbl-scroll"><table><thead><tr>' +
+
+      html += '<div class="tbl-scroll"><table><thead><tr>' +
         "<th>#</th><th>Jogador</th><th>Pais</th><th>Time</th><th>MMR / RP</th><th>Notas</th>" +
         "</tr></thead><tbody>";
-      rk.solo.forEach(function (p) {
-        h += '<tr class="rank-medals rank-' + p.pos + '"><td class="num"><b>' + esc(p.pos) + "</b></td>" +
-          "<td><div class='team-cell'><span class='team-logo'>" + esc(initials(p.tag)) + "</span>" +
-          '<div><div class="tn">' + esc(p.tag) + '</div><div class="tr">' + esc(p.real) + "</div></div></div></td>" +
-          "<td>" + esc(p.country) + "</td>" +
-          "<td>" + esc(p.team) + "</td>" +
+      ranking.solo.forEach(function (jogador) {
+        html += '<tr class="rank-medals rank-' + jogador.position + '"><td class="num"><b>' + escapar(jogador.position) + "</b></td>" +
+          "<td><div class='team-cell'><span class='team-logo'>" + escapar(iniciais(jogador.nickname)) + "</span>" +
+          '<div><div class="tn">' + escapar(jogador.nickname) + '</div><div class="tr">' + escapar(jogador.realName) + "</div></div></div></td>" +
+          "<td>" + escapar(jogador.country) + "</td>" +
+          "<td>" + escapar(jogador.team) + "</td>" +
           '<td><span class="mmr-na">sem MMR publico</span></td>' +
-          '<td class="small">' + esc(p.note) + "</td></tr>";
+          '<td class="small">' + escapar(jogador.note) + "</td></tr>";
       });
-      h += "</tbody></table></div>";
+      html += "</tbody></table></div>";
     }
 
-    h += '<p class="small muted" style="margin-top:18px">Data de referencia do ranking: <b>' +
-      esc(fmtDate(rk.snapshot)) + "</b>. Fontes: " +
-      '<a class="src-link" href="' + esc(CFG.sources.standings) + '" target="_blank" rel="noopener">Ubisoft global standings</a> e ' +
-      '<a class="src-link" href="' + esc(CFG.sources.sixstats) + '" target="_blank" rel="noopener">SixStats</a>.</p>';
-    return h;
+    html += '<p class="small muted" style="margin-top:18px">Data de referencia do ranking: <b>' +
+      escapar(formatarData(ranking.snapshot)) + "</b>. Fontes: " +
+      '<a class="src-link" href="' + escapar(CONFIG.sources.standings) + '" target="_blank" rel="noopener">Ubisoft global standings</a> e ' +
+      '<a class="src-link" href="' + escapar(CONFIG.sources.sixstats) + '" target="_blank" rel="noopener">SixStats</a>.</p>';
+
+    return html;
   }
 
-  /* ------------------------------------------------ router */
-  var lastPath = null;
-  function render() {
-    var r = parseHash();
-    var q = r.query;
+  /* =================================================================
+     PARTE 5 - A DECISAO DE QUAL PAGINA MOSTRAR
+     ================================================================= */
+
+  var ultimoCaminho = null;
+
+  function desenharPagina() {
+    var url = lerUrl();
+    var filtros = url.filtros;
+    var secao = url.pedacos[0] || "";
     var html = "";
-    var navKey = r.parts[0] || "";
 
-    /* preserva foco e cursor dos campos de busca dentro de #main */
-    var ae = document.activeElement;
-    var keepId = (ae && ae.id && main.contains(ae)) ? ae.id : null;
-    var keepPos = (keepId && ae.selectionStart != null) ? ae.selectionStart : null;
+    /* Quando a página é redesenhada por causa de um filtro, o cursor
+       do campo de busca não pode pular. Guardamos onde ele estava. */
+    var elementoFocado = document.activeElement;
+    var idDoCampoFocado = (elementoFocado && elementoFocado.id && AREA_PRINCIPAL.contains(elementoFocado))
+      ? elementoFocado.id : null;
+    var posicaoDoCursor = (idDoCampoFocado && elementoFocado.selectionStart != null)
+      ? elementoFocado.selectionStart : null;
 
-    if (navKey === "") html = viewHome();
-    else if (navKey === "agentes") html = viewAgents(q);
-    else if (navKey === "agente") html = viewAgent(decodeURIComponent(r.parts[1] || ""));
-    else if (navKey === "armas") html = viewWeapons(q);
-    else if (navKey === "arma") html = viewWeapon(r.parts[1] ? decodeURIComponent(r.parts[1]) : "");
-    else if (navKey === "noticias") html = viewNews(q);
-    else if (navKey === "rankings") html = viewRankings(q);
-    else {
+    if (secao === "") {
+      html = paginaInicial();
+    } else if (secao === "agentes") {
+      html = paginaOperadores(filtros);
+    } else if (secao === "agente") {
+      html = paginaOperador(decodeURIComponent(url.pedacos[1] || ""));
+    } else if (secao === "armas") {
+      html = paginaArmas(filtros);
+    } else if (secao === "arma") {
+      html = paginaArma(url.pedacos[1] ? decodeURIComponent(url.pedacos[1]) : "");
+    } else if (secao === "noticias") {
+      html = paginaNoticias(filtros);
+    } else if (secao === "rankings") {
+      html = paginaRankings(filtros);
+    } else {
       html = '<div class="empty-state"><b>Pagina nao encontrada</b><a href="#/">Voltar ao inicio</a></div>';
     }
 
-    main.innerHTML = html;
-    document.title = pageTitle(navKey) + " | R6 HUB";
+    AREA_PRINCIPAL.innerHTML = html;
+    document.title = tituloDaPagina(secao) + " | R6 HUB";
 
-    /* nav ativo */
-    document.querySelectorAll("#nav a").forEach(function (a) {
-      var k = a.getAttribute("data-nav");
-      var on = (k === "/" && navKey === "") || (k && k === navKey) ||
-        (k === "agentes" && navKey === "agente") || (k === "armas" && navKey === "arma");
-      a.classList.toggle("active", !!on);
+    /* Marca no menu qual aba está aberta */
+    document.querySelectorAll("#nav a").forEach(function (link) {
+      var chave = link.getAttribute("data-nav");
+      var estaAberto = (chave === "/" && secao === "") ||
+                       (chave && chave === secao) ||
+                       (chave === "agentes" && secao === "agente") ||
+                       (chave === "armas" && secao === "arma");
+      link.classList.toggle("active", !!estaAberto);
     });
 
-    bindDynamic();
+    ligarBotoes();
 
-    if (keepId) {
-      var el = document.getElementById(keepId);
-      if (el) {
-        el.focus();
-        if (keepPos != null && el.setSelectionRange) {
-          try { el.setSelectionRange(keepPos, keepPos); } catch (e) { /* ignore */ }
+    /* Devolve o cursor para o campo de busca */
+    if (idDoCampoFocado) {
+      var campo = document.getElementById(idDoCampoFocado);
+      if (campo) {
+        campo.focus();
+        if (posicaoDoCursor != null && campo.setSelectionRange) {
+          try { campo.setSelectionRange(posicaoDoCursor, posicaoDoCursor); } catch (erro) { /* ignora */ }
         }
       }
     }
-    if (lastPath === null || lastPath !== r.path) window.scrollTo(0, 0);
-    lastPath = r.path;
 
-    if (navKey === "rankings") loadLiveRankings();
+    /* Só volta ao topo quando mudou de página, não a cada filtro */
+    if (ultimoCaminho === null || ultimoCaminho !== url.caminho) window.scrollTo(0, 0);
+    ultimoCaminho = url.caminho;
+
+    if (secao === "rankings") carregarRankingDaApi();
   }
 
-  function pageTitle(navKey) {
+  function tituloDaPagina(secao) {
     return {
       "": "Hub de Rainbow Six Siege",
       "agentes": "Agentes",
@@ -848,156 +1172,219 @@
       "arma": "Arma",
       "noticias": "Noticias e Balanceamento",
       "rankings": "Rankings"
-    }[navKey] || "R6 HUB";
+    }[secao] || "R6 HUB";
   }
 
-  /* eventos delegados dentro de #main */
-  function bindDynamic() {
-    /* acordeoes de arma */
-    main.querySelectorAll("[data-wtoggle]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        b.parentNode.classList.toggle("open");
-        b.querySelector(".sp").textContent =
-          b.parentNode.classList.contains("open") ? "fechar" : "meta de pecas";
-      });
-    });
-    /* patches */
-    main.querySelectorAll("[data-ptoggle]").forEach(function (b) {
-      b.addEventListener("click", function () { b.parentNode.classList.toggle("open"); });
-    });
-    var ex = $("#expand-all");
-    if (ex) ex.addEventListener("click", function () {
-      var open = main.querySelectorAll(".patch.open").length < main.querySelectorAll(".patch").length / 2;
-      main.querySelectorAll(".patch").forEach(function (p) { p.classList.toggle("open", open); });
-      ex.textContent = open ? "Recolher tudo" : "Expandir tudo";
-    });
-    /* abas */
-    main.querySelectorAll("[data-tab]").forEach(function (t) {
-      t.addEventListener("click", function () {
-        setQuery({ tab: t.getAttribute("data-tab") });
-      });
-    });
-    /* filtros de operador */
-    function bindSel(id, key, cast) {
-      var el = $("#" + id);
-      if (el) el.addEventListener("change", function () {
-        var v = el.value;
-        var p = {}; p[key] = v;
-        setQuery(p);
-      });
-    }
-    bindSel("f-side", "side");
-    bindSel("f-role", "role");
-    bindSel("f-ctu", "ctu");
-    bindSel("f-speed", "speed");
-    bindSel("f-health", "health");
-    bindSel("f-year", "year");
-    bindSel("w-type", "type");
+  /* =================================================================
+     PARTE 6 - LIGAR OS BOTÕES
+     =================================================================
+     Tudo aqui é ligado depois que o HTML é montado, porque o conteúdo
+     muda toda vez que o usuário troca de página.                          */
+  function ligarBotoes() {
 
-    /* inputs de busca com debounce */
-    function bindInput(id, key) {
-      var el = $("#" + id);
-      if (!el) return;
-      var t = null;
-      el.addEventListener("input", function () {
-        clearTimeout(t);
-        var v = el.value;
-        t = setTimeout(function () { var p = {}; p[key] = v; setQuery(p); }, 320);
+    /* Abre e fecha a linha de uma arma */
+    AREA_PRINCIPAL.querySelectorAll("[data-wtoggle]").forEach(function (botao) {
+      botao.addEventListener("click", function () {
+        botao.parentNode.classList.toggle("open");
+        botao.querySelector(".sp").textContent =
+          botao.parentNode.classList.contains("open") ? "fechar" : "meta de pecas";
+      });
+    });
+
+    /* Abre e fecha um patch */
+    AREA_PRINCIPAL.querySelectorAll("[data-ptoggle]").forEach(function (botao) {
+      botao.addEventListener("click", function () {
+        botao.parentNode.classList.toggle("open");
+      });
+    });
+
+    /* Botão "Expandir tudo" / "Recolher tudo" */
+    var botaoExpandir = pegarElemento("expand-all");
+    if (botaoExpandir) {
+      botaoExpandir.addEventListener("click", function () {
+        var todosOsPatches = AREA_PRINCIPAL.querySelectorAll(".patch");
+        var jaAbertos = AREA_PRINCIPAL.querySelectorAll(".patch.open").length;
+        var querAbrir = jaAbertos < todosOsPatches.length / 2;
+        todosOsPatches.forEach(function (patch) { patch.classList.toggle("open", querAbrir); });
+        botaoExpandir.textContent = querAbrir ? "Recolher tudo" : "Expandir tudo";
       });
     }
-    bindInput("f-q", "q");
-    bindInput("w-q", "q");
+
+    /* Abas (Notícias / Balanceamentos / Times / Solo) */
+    AREA_PRINCIPAL.querySelectorAll("[data-tab]").forEach(function (botao) {
+      botao.addEventListener("click", function () {
+        var mudanca = {};
+        mudanca.tab = botao.getAttribute("data-tab");
+        mudarFiltro(mudanca);
+      });
+    });
+
+    /* Lê um <select> de filtro e joga o valor na URL. */
+    function ligarSelecao(idDoCampo, nomeDoFiltro) {
+      var campo = pegarElemento(idDoCampo);
+      if (!campo) return;
+      campo.addEventListener("change", function () {
+        var mudanca = {};
+        mudanca[nomeDoFiltro] = campo.value;
+        mudarFiltro(mudanca);
+      });
+    }
+
+    ligarSelecao("f-side", "side");
+    ligarSelecao("f-role", "role");
+    ligarSelecao("f-ctu", "ctu");
+    ligarSelecao("f-speed", "speed");
+    ligarSelecao("f-health", "health");
+    ligarSelecao("f-year", "year");
+    ligarSelecao("w-type", "type");
+
+    /* Campo de busca de filtro. Espera a pessoa parar de digitar
+       antes de redesenhar, senão a página pisca a cada tecla. */
+    function ligarBusca(idDoCampo, nomeDoFiltro) {
+      var campo = pegarElemento(idDoCampo);
+      if (!campo) return;
+      var tempoEspera = null;
+      campo.addEventListener("input", function () {
+        clearTimeout(tempoEspera);
+        var valorDigitado = campo.value;
+        tempoEspera = setTimeout(function () {
+          var mudanca = {};
+          mudanca[nomeDoFiltro] = valorDigitado;
+          mudarFiltro(mudanca);
+        }, 320);
+      });
+    }
+
+    ligarBusca("f-q", "q");
+    ligarBusca("w-q", "q");
   }
 
-  /* ------------------------------------------------ busca global */
-  function globalSearch(term) {
-    var box = $("#search-results");
-    var t = norm(term);
-    if (t.length < 2) { box.hidden = true; box.innerHTML = ""; return; }
+  /* =================================================================
+     A BUSCA NO TOPO DA PAGINA
+     ================================================================= */
+  function buscaGlobal(termo) {
+    var caixa = pegarElemento("search-results");
+    var texto = normalizar(termo);
 
-    var ops = D.operators.filter(function (o) {
-      return norm([o.n, o.ctu, o.reg, o.g, o.gt].join(" ")).indexOf(t) !== -1;
+    if (texto.length < 2) {
+      caixa.hidden = true;
+      caixa.innerHTML = "";
+      return;
+    }
+
+    var operadores = DADOS.operators.filter(function (operador) {
+      return normalizar([operador.name, operador.unit, operador.region, operador.gadget, operador.gadgetType].join(" "))
+        .indexOf(texto) !== -1;
     }).slice(0, 7);
-    var wps = D.weapons.filter(function (w) {
-      return norm([w.n, w.t].join(" ")).indexOf(t) !== -1;
+
+    var armas = DADOS.weapons.filter(function (arma) {
+      return normalizar([arma.name, arma.type].join(" ")).indexOf(texto) !== -1;
     }).slice(0, 6);
 
-    var h = "";
-    if (ops.length) {
-      h += '<div class="sr-group"><div class="sr-title">Operadores</div>';
-      ops.forEach(function (o) {
-        h += '<a class="sr-item" href="#/agente/' + enc(o.id) + '">' +
-          '<span class="tag ' + (o.side === "ATK" ? "atk" : "def") + '">' + sideShort(o.side) + "</span>" +
-          "<span><b>" + esc(o.n) + '</b><br><small>' + esc(o.g) + "</small></span></a>";
+    var html = "";
+
+    if (operadores.length) {
+      html += '<div class="sr-group"><div class="sr-title">Operadores</div>';
+      operadores.forEach(function (operador) {
+        html += '<a class="sr-item" href="#/agente/' + codificarParaLink(operador.id) + '">' +
+          '<span class="tag ' + (operador.side === "ATK" ? "atk" : "def") + '">' + siglaDoLado(operador.side) + "</span>" +
+          "<span><b>" + escapar(operador.name) + '</b><br><small>' + escapar(operador.gadget) + "</small></span></a>";
       });
-      h += "</div>";
+      html += "</div>";
     }
-    if (wps.length) {
-      h += '<div class="sr-group"><div class="sr-title">Armas</div>';
-      wps.forEach(function (w) {
-        h += '<a class="sr-item" href="#/arma/' + encodeURIComponent(w.n) + '">' +
-          '<span class="tag def">' + esc(w.t) + "</span>" +
-          "<span><b>" + esc(w.n) + "</b><br><small>" + esc(w.dmg) + " dano &middot; " + esc(w.mag) + "</small></span></a>";
+
+    if (armas.length) {
+      html += '<div class="sr-group"><div class="sr-title">Armas</div>';
+      armas.forEach(function (arma) {
+        html += '<a class="sr-item" href="#/arma/' + codificarParaLink(arma.name) + '">' +
+          '<span class="tag def">' + escapar(arma.type) + "</span>" +
+          "<span><b>" + escapar(arma.name) + '</b><br><small>' + escapar(arma.damage) +
+          " dano &middot; " + escapar(arma.magazine) + "</small></span></a>";
       });
-      h += "</div>";
+      html += "</div>";
     }
-    if (!h) h = '<div class="sr-empty">Nada encontrado para &ldquo;' + esc(term) + "&rdquo;.</div>";
-    box.innerHTML = h;
-    box.hidden = false;
+
+    if (!html) {
+      html = '<div class="sr-empty">Nada encontrado para &ldquo;' + escapar(termo) + "&rdquo;.</div>";
+    }
+
+    caixa.innerHTML = html;
+    caixa.hidden = false;
   }
 
-  /* ------------------------------------------------ boot */
-  function init() {
-    /* fontes no footer */
-    var ul = $("#footer-sources");
-    if (ul) {
-      var s = CFG.sources;
-      ul.innerHTML = [
-        ["Operadores (Ubisoft)", s.operators],
-        ["Operadores (wiki)", s.wiki],
-        ["Patch notes oficiais", s.patchNotes],
-        ["Ranking profissional", s.standings],
-        ["Ranking rolling 12m", s.sixstats],
-        ["Pecas e efeitos", s.attachments]
-      ].map(function (x) {
-        return '<li><a href="' + esc(x[1]) + '" target="_blank" rel="noopener">' + esc(x[0]) + "</a></li>";
+  /* =================================================================
+     PARTE 7 - INICIALIZACAO (roda uma vez, quando a página abre)
+     ================================================================= */
+  function iniciar() {
+
+    /* Lista de fontes no rodapé */
+    var listaDeFontes = pegarElemento("footer-sources");
+    if (listaDeFontes) {
+      var fontes = CONFIG.sources;
+      listaDeFontes.innerHTML = [
+        ["Operadores (Ubisoft)", fontes.operators],
+        ["Operadores (wiki)", fontes.wiki],
+        ["Patch notes oficiais", fontes.patchNotes],
+        ["Ranking profissional", fontes.standings],
+        ["Ranking rolling 12m", fontes.sixstats],
+        ["Pecas e efeitos", fontes.attachments]
+      ].map(function (fonte) {
+        return '<li><a href="' + escapar(fonte[1]) + '" target="_blank" rel="noopener">' + escapar(fonte[0]) + "</a></li>";
       }).join("");
     }
 
-    /* nav mobile */
-    var burger = $("#burger"), nav = $("#nav");
-    burger.addEventListener("click", function () {
-      var open = nav.classList.toggle("open");
-      burger.setAttribute("aria-expanded", open ? "true" : "false");
-    });
-    nav.addEventListener("click", function (e) {
-      if (e.target.tagName === "A") nav.classList.remove("open");
+    /* Menu no celular: o botão de três riscos abre e fecha */
+    var botaoMenu = pegarElemento("burger");
+    var menu = pegarElemento("nav");
+
+    botaoMenu.addEventListener("click", function () {
+      var aberto = menu.classList.toggle("open");
+      botaoMenu.setAttribute("aria-expanded", aberto ? "true" : "false");
     });
 
-    /* busca global */
-    var si = $("#search-input"), box = $("#search-results");
-    var t = null;
-    si.addEventListener("input", function () {
-      clearTimeout(t);
-      var v = si.value;
-      t = setTimeout(function () { globalSearch(v); }, 140);
-    });
-    si.addEventListener("focus", function () { if (si.value.length >= 2) globalSearch(si.value); });
-    document.addEventListener("click", function (e) {
-      if (!e.target.closest("#search") && !e.target.closest("#search-results")) box.hidden = true;
-    });
-    si.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") { box.hidden = true; si.blur(); }
+    menu.addEventListener("click", function (evento) {
+      if (evento.target.tagName === "A") menu.classList.remove("open");
     });
 
-    window.addEventListener("hashchange", render);
-    render();
+    /* Busca do topo */
+    var campoBusca = pegarElemento("search-input");
+    var caixaResultados = pegarElemento("search-results");
+    var tempoDeEspera = null;
 
-    /* abre o patch mais recente por padrao na aba de balanceamento */
-    var first = document.querySelector(".patch");
-    if (first) first.classList.add("open");
+    campoBusca.addEventListener("input", function () {
+      clearTimeout(tempoDeEspera);
+      var digitado = campoBusca.value;
+      tempoDeEspera = setTimeout(function () { buscaGlobal(digitado); }, 140);
+    });
+
+    /* Clique no campo já preenchido mostra o resultado de novo */
+    campoBusca.addEventListener("focus", function () {
+      if (campoBusca.value.length >= 2) buscaGlobal(campoBusca.value);
+    });
+
+    /* Clicou fora da busca? Fecha os resultados. */
+    document.addEventListener("click", function (evento) {
+      var clicouDentro = evento.target.closest("#search") || evento.target.closest("#search-results");
+      if (!clicouDentro) caixaResultados.hidden = true;
+    });
+
+    /* Esc fecha a busca */
+    campoBusca.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape") {
+        caixaResultados.hidden = true;
+        campoBusca.blur();
+      }
+    });
+
+    /* A página redesenha sozinha quando o endereço muda */
+    window.addEventListener("hashchange", desenharPagina);
+    desenharPagina();
+
+    /* Na aba de balanceamentos, já abre o patch mais recente */
+    var primeiroPatch = document.querySelector(".patch");
+    if (primeiroPatch) primeiroPatch.classList.add("open");
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar);
+  else iniciar();
 })();

@@ -8,8 +8,14 @@ window.R6HUB_CONFIG = {
   /* Endpoints opcionais de ranking ao vivo.
      Deixe vazio para usar o snapshot local (padrao).
      Se preenchido, o site tenta o fetch e cai no snapshot em caso de falha.
-     Formato esperado: JSON { teams: [...], solo: [...] }
-     com os mesmos campos usados em assets/js/data/rankings.js                */
+     Formato esperado: JSON { "teams": [...], "solo": [...] }
+     com os mesmos nomes de campo usados em assets/js/data/rankings.js:
+
+       teams: { position, name, region, team, coach, titles[],
+                rollingPosition, rollingPoints, siPoints }
+       solo:  { position, nickname, realName, country, team, note }
+
+     "siPoints" em teams sao os PONTOS do Six Invitational.                */
   rankingApiUrl: "",
   rankingApiHeaders: {},
 
