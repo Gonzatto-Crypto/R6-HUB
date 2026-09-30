@@ -7,7 +7,7 @@
   "use strict";
   window.R6HUB = window.R6HUB || {};
 
-  /* Efeito de cada peca (medidos/documented na wiki) */
+  /* Efeito de cada peca (medidos e documentados na wiki) */
   window.R6HUB.attachmentEffects = {
     "Flash Hider":          { slot: "cano",    d: "-20% de recuo vertical",            conf: "media" },
     "Compensator":          { slot: "cano",    d: "-40% de recuo horizontal",          conf: "media" },

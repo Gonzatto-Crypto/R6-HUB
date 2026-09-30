@@ -3,15 +3,37 @@
 > Arquivo de trabalho entre sessões. **NÃO faz parte do site** e não precisa ser
 > copiado para o VS Code. Pode apagar quando a entrega terminar.
 
+## ESTADO: EM ANDAMENTO — entrega do código por partes
+
+O usuário pediu explicitamente que a entrega continuasse ("continua" + "continue if you have
+next steps"). Partes já emitidas:
+
+- **Parte 1**: `README.md`, `index.html`, `assets/js/config.js` — OK
+- **Parte 2**: `assets/css/styles.css` (686 linhas, 2 blocos) — OK
+- **Parte 3**: `assets/js/app.js` (1003 linhas, 3 blocos) — OK, **com 1 correção avisada**:
+  na linha 370 usar `E o que separa este operador...` (a versão emitida tinha texto em inglês)
+
+Próxima: **Parte 4 — `assets/js/data/operators.js`** (761 linhas / ~50 KB, 4 blocos).
+
+## Correção de typos aplicada em 2026-09-29 (validação: 3 testes verdes)
+
+Dois typos reais estavam no dataset e foram corrigidos na origem:
+
+- `operators.js` Montagne: `em ẍar rush` -> `em um rush`
+- `operators.js` Dokkaebi: `marcam emium pings` -> `marcam inimigos`
+
+Como o `operators.js` já foi corrigido no disco, a **Parte 4 deve ser emitida a partir da
+versão corrigida**. Não reemitir a versão antiga.
+
 ## Como retomar
 
-Amanhã, na primeira mensagem, escreva apenas:
+Na primeira mensagem da próxima sessão, leia este arquivo inteiro. Depois depende do que o
+usuário pedir:
 
-```
-continuar entrega do R6 HUB
-```
-
-Leia este arquivo inteiro antes de gerar qualquer código.
+- `continua` -> retomar a próxima parte pendente da lista (não repetir as anteriores).
+- `preciso mudar X` / `arrumar Y` -> aplicar a mudança pedida, rodar os 3 testes da secao 7 e
+  atualizar este arquivo.
+- `ajuda com imagens` -> os hooks já mapeados estão na secao "imagens" mais abaixo.
 
 ---
 
@@ -68,12 +90,13 @@ Desligar o PC **não perde nada**: todos os arquivos já estão no disco em
 | 9 | `tools/build-data.ps1` | pendente |
 | 10 | `_selftest.html` + `_selftest-api.html` | pendente |
 
-**Próximo passo imediato: emitir a Parte 2 — `assets/css/styles.css`.**
+**Próximo passo imediato: ESPERAR.** A entrega está pausada. A Parte 2 (`assets/css/styles.css`)
+está pronta para sair, mas só quando o usuário mandar.
 
-O usuário já tem a Parte 1 na mão. Ao retomar, **não repita a Parte 1**; apenas diga que está
-indo para a Parte 2 e emita o CSS. Se o usuário disser que não colou a Parte 1, reemitir.
+O usuário ainda tem a Parte 1 na mão (`README.md`, `index.html`, `assets/js/config.js`). Se ele
+disser que não colou, reemitir.
 
-## 4.(decisões) sobre os `.js` gerados
+## 4._(renomeado)_ Decisão sobre os `.js` gerados
 
 `assets/js/data/patchnotes.js` (87889 bytes) e `assets/js/data/news.js` (11642 bytes) são
 **byte-equivalentes ao conteúdo** dos JSONs correspondentes, embrulhados em
@@ -196,3 +219,45 @@ foreach ($f in @("patchnotes","news")) {
 - Não reexecutar `build-data.ps1` sem necessidade (ele é idempotente, mas não faz sentido).
 - Não repetir a Parte 1 da entrega.
 - Não voltar a sugerir o guia de VS Code.
+- **Não emitir a Parte 2 sem o usuário pedir.** A entrega está pausada (ver seção 0).
+
+---
+
+## 9. Contexto para o trabalho com IMAGENS (pedido previsto)
+
+O usuário já avisou que vai pedir ajuda com imagens. Estado atual, medido no código:
+
+**Hoje o projeto não usa nenhuma imagem.** Verificado: zero `<img>` e zero `background-image` em
+todo o repositório. `assets\img\` existe mas está **vazia**. Isso é intencional — o site foi feito
+para funcionar offline e completo sem assets binários.
+
+Consequência boa: **incluir imagens é puramente aditivo**, não é refatoração. Não existe código
+que quebre ao adicionar arquivos.
+
+Os pontos de inserção já existentes (todos textuais hoje):
+
+| Onde | Trecho | Uso hoje |
+| --- | --- | --- |
+| `assets/js/app.js:30` | `function initials(name)` | Gera 2 letras maiúsculas a partir do nome |
+| `assets/js/app.js:143` | `.avatar` + `initials(op.n)` | Card de operador na lista |
+| `assets/js/app.js:348` | `.avatar` + `initials(op.n)` | Avatar no detalhe do operador |
+| `assets/js/app.js:525` | `.avatar` + `initials(w.n)` | Card de arma |
+| `assets/js/app.js:725` | `.team-logo` + `initials(t.name)` | Time na tabela de rankings |
+| `assets/js/app.js:773` | `.team-logo` + `initials(p.tag)` | Jogador na aba solo |
+| `index.html:21` | `.brand-mark` com texto `R6` | Marca da logo no header |
+| `assets/css/styles.css:85` | regra `.brand-mark` | Estilo da marca |
+| `assets/css/styles.css:593` | regra `.team-logo` | Estilo do logo de time |
+
+O caminho mais limpo para imagens: alterar `initials()` para devolver um `<img>` quando o
+arquivo existir e cair no texto quando não existir. Assim os 5 usos se resolvem de uma vez e
+nenhum dado precisa ganhar campo novo.
+
+Cuidados a levar em conta quando o tema de imagens aparecer:
+
+- Manter o `alt` e o `loading="lazy"` nos cards.
+- Não quebrar o `initials()`: ele é usado como fallback e os testes contam `.team-logo` /
+  `.avatar`. Rodar a secao 7 depois de mexer.
+- Times e jogadores têm logotipo oficial com direitos de uso da Ubisoft; avise antes de
+  embutir logo de terceiros no site.
+- Nomes de arquivo devem ser normalizados (sem acento, minusculo, hifen) para casar com uma
+  chave de lookup em `operators.js` / `weapons.js`.

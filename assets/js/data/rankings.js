@@ -117,7 +117,7 @@
       { pos: 5, tag: "VITAKING", real: "Victor Augusto dos Santos", country: "Brasil", team: "FaZe Clan",              mmu: null,
         note: "Campeao do SI 2025, SI 2026 e EWC 2026.",
         source: "https://sixstats.cc/article/42-faze-clan-are-esports-world-cup-2026-champions" },
-      { pos: 6, tag: "Spoit",  real: "William Lofstedt",           country: "Suecia",  team: "Shopify Rebellion",      mmu: null,
+      { pos: 6, tag: "Spoit",  real: "William Lofstedt",           country: "Suécia", team: "Shopify Rebellion",     mmu: null,
         note: "Campeao do Six Berlin Major. Campeao da NA League 2023 Stage 1. Entrou na Shopify Rebellion em 2026-02-22 apos dois anos no M80.",
         source: "https://siege.gg/players/380-spoit" },
       { pos: 7, tag: "jume",   real: "Marc Steinmann",             country: "Alemanha", team: "Team Falcons",          mmu: null,
