@@ -69,19 +69,23 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
       " solo=" + D.rankings.solo.length);
   if (D.operators.length !== 78) fail("esperava 78 operadores, veio " + D.operators.length);
 
-  var campos = ["id", "n", "side", "ctu", "reg", "y", "h", "sp", "g", "gt", "gd", "un", "best", "bio"];
+  var campos = ["id", "name", "side", "unit", "region", "year", "health", "speed",
+                "gadget", "gadgetType", "gadgetDescription", "uniqueAbility", "best", "bio"];
   D.operators.forEach(function (o) {
     campos.forEach(function (c) { if (o[c] === undefined || o[c] === null || o[c] === "") fail("operador " + o.id + " sem campo " + c); });
-    if (!Array.isArray(o.r) || !o.r.length) fail(o.id + ".r invalido");
-    if (!Array.isArray(o.sec)) fail(o.id + ".sec invalido");
-    var pool = D.gadgetPool[o.side].map(function (g) { return g.n; });
-    o.sec.forEach(function (s) { if (pool.indexOf(s) === -1) fail("gadget secundario desconhecido: " + s + " (" + o.id + ")"); });
-    o.p.concat(o.s).forEach(function (wn) { if (!D.weaponIndex[wn.toLowerCase()]) fail("arma fora do catalogo: " + wn + " (" + o.id + ")"); });
+    if (!Array.isArray(o.roles) || !o.roles.length) fail(o.id + ".roles invalido");
+    if (!Array.isArray(o.secondaryGadgets)) fail(o.id + ".secondaryGadgets invalido");
+    var pool = D.gadgetPool[o.side].map(function (g) { return g.name; });
+    o.secondaryGadgets.forEach(function (s) { if (pool.indexOf(s) === -1) fail("gadget secundario desconhecido: " + s + " (" + o.id + ")"); });
+    o.primaryWeapons.concat(o.secondaryWeapons).forEach(function (wn) { if (!D.weaponIndex[wn.toLowerCase()]) fail("arma fora do catalogo: " + wn + " (" + o.id + ")"); });
   });
   var seen = {};
   D.operators.forEach(function (o) { if (seen[o.id]) fail("id duplicado: " + o.id); seen[o.id] = 1; });
   var wseen = {};
-  D.weapons.forEach(function (w) { if (wseen[w.n]) fail("arma duplicada: " + w.n); wseen[w.n] = 1; });
+  D.weapons.forEach(function (w) { if (wseen[w.name]) fail("arma duplicada: " + w.name); wseen[w.name] = 1; });
+  D.rankings.teamsMore.forEach(function (t) {
+    if (t.siPoints !== undefined) fail("teamsMore ainda usa siPoints (deveria ser siPosition): " + t.name);
+  });
   if (!bad.length) log("[dados] integridade OK (campos, gadgets, referencias de armas, sem duplicados)");
 
   /* ---------- 2. render de cada rota ---------- */
