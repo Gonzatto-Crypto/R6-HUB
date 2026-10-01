@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Vigil">
+  <defs>
+    <linearGradient id="fundo" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="hsl(213 44% 25%)"/>
+      <stop offset="1" stop-color="hsl(213 40% 10%)"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" fill="url(#fundo)"/>
+  <g fill="none" stroke="hsl(213 70% 60%)" stroke-opacity="0.16" stroke-width="7" stroke-linecap="round">
+    <path d="M-10 37 L157 1"/>
+    <path d="M8 87 L112 35"/>
+  </g>
+  <path d="M25 120c0-16 12-27 35-27s35 11 35 27z" fill="hsl(213 32% 16%)"/>
+  <path d="M36 66c0-16 11-28 24-28s24 12 24 28v4H36z" fill="hsl(213 32% 16%)"/>
+  <rect x="41" y="62" width="39" height="16" rx="7" fill="hsl(213 70% 60%)" fill-opacity="0.92"/>
+  <rect x="36" y="93" width="48" height="3" rx="1.5" fill="hsl(213 70% 60%)" fill-opacity="0.35"/>
+</svg>

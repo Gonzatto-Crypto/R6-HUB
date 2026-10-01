@@ -58,6 +58,27 @@
     return (partes[0][0] + partes[1][0]).toUpperCase();
   }
 
+  /* "Finka" vira "finka", "Tachanka" vira "tachanka".
+     Serve para achar o arquivo do desenho em assets/img/operators/. */
+  function arquivoDoOperador(nome) {
+    return "assets/img/operators/" + String(nome || "")
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") + ".svg";
+  }
+
+  /* Desenha o quadradinho do Operador: o arquivo SVG por cima e as
+     iniciais por baixo. Se o desenho nao carregar, o onerror tira a
+     imagem e sobra so o texto -- nunca aparece um quadrado vazio. */
+  function avatarDoOperador(operador) {
+    return '<div class="avatar">' +
+      '<span class="avatar-letras">' + escapar(iniciais(operador.name)) + "</span>" +
+      '<img src="' + escapar(arquivoDoOperador(operador.name)) + '" alt="' +
+        escapar("Retrato do operador " + operador.name) + '" loading="lazy" decoding="async" onerror="this.remove()">' +
+    "</div>";
+  }
+
   var NOMES_DOS_MESES = ["jan", "fev", "mar", "abr", "mai", "jun",
                          "jul", "ago", "set", "out", "nov", "dez"];
 
@@ -236,7 +257,7 @@
 
     return '<a class="card ' + classeDoLado + '" href="#/agente/' + codificarParaLink(operador.id) + '">' +
       '<div class="card-top">' +
-        '<div class="avatar">' + escapar(iniciais(operador.name)) + "</div>" +
+        avatarDoOperador(operador) +
         '<div class="card-title"><h3>' + escapar(operador.name) + "</h3>" +
         '<div class="sub">' + escapar(operador.unit) + " &middot; " + escapar(operador.region) + "</div></div>" +
         '<span class="side-badge ' + classeDoLado + '">' + siglaDoLado(operador.side) + "</span>" +
@@ -509,7 +530,7 @@
     ]);
 
     html += '<section class="detail-hero ' + classeDoLado + '">' +
-      '<div class="avatar">' + escapar(iniciais(operador.name)) + "</div>" +
+      avatarDoOperador(operador) +
       "<div>" +
         '<span class="eyebrow">' + nomeDoLado(operador.side) + " &middot; " + escapar(operador.unit) + "</span>" +
         "<h1>" + escapar(operador.name) + "</h1>" +

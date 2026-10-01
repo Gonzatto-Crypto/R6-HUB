@@ -408,8 +408,10 @@ select:focus, .filtro-campo:focus { border-color: var(--dourado); outline: none;
   display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 12px;
 }
 
-/* O quadradinho de 52px com as iniciais do nome.
-   Se colocar uma imagem aqui, mantenha o texto como reserva. */
+/* O quadradinho de 52px com o desenho do operador.
+   O <span> com as iniciais fica na mesma celula da grade que o <img>,
+   entao a imagem cobre o texto. Se o SVG nao carregar, o onerror remove
+   a imagem e as iniciais aparecem no lugar. */
 .avatar {
   width: 52px; height: 52px; flex: 0 0 auto; border-radius: var(--canto-m);
   display: grid; place-items: center; overflow: hidden;
@@ -419,7 +421,8 @@ select:focus, .filtro-campo:focus { border-color: var(--dourado); outline: none;
 }
 .card.atk .avatar { background: linear-gradient(150deg, #3a1f1c, #1d1412); }
 .card.def .avatar { background: linear-gradient(150deg, #172c40, #121a22); }
-.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar > * { grid-area: 1 / 1; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .card-title { min-width: 0; flex: 1; }
 .card-title h3 {

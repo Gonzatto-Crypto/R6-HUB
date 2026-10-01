@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Montagne">
+  <defs>
+    <linearGradient id="fundo" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="hsl(12 46% 26%)"/>
+      <stop offset="1" stop-color="hsl(12 40% 11%)"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" fill="url(#fundo)"/>
+  <g fill="none" stroke="hsl(12 72% 58%)" stroke-opacity="0.16" stroke-width="7" stroke-linecap="round">
+    <path d="M-10 38 L134 -2"/>
+    <path d="M8 86 L112 32"/>
+  </g>
+  <path d="M28 120c0-16 12-27 32-27s32 11 32 27z" fill="hsl(12 30% 17%)"/>
+  <path d="M36 66c0-16 11-28 24-28s24 12 24 28v4H36z" fill="hsl(12 30% 17%)"/>
+  <rect x="41" y="62" width="42" height="13" rx="7" fill="hsl(12 72% 58%)" fill-opacity="0.92"/>
+  <rect x="36" y="93" width="48" height="3" rx="1.5" fill="hsl(12 72% 58%)" fill-opacity="0.35"/>
+</svg>

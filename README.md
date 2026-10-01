@@ -38,6 +38,9 @@ assets/js/data/rankings.js    a lista de times e jogadores
 assets/js/data/patchnotes.js  os balanceamentos  (gerado, não editar)
 assets/js/data/news.js        as notícias         (gerado, não editar)
 
+assets/img/operators/         um desenho SVG por Operador
+assets/img/operators/LEIA-ME.md  de onde veio e a licença dos desenhos
+
 data/patchnotes.json          a fonte dos balanceamentos
 data/news.json                a fonte das notícias
 tools/build-data.ps1          script que regera os dois arquivos "gerado"
