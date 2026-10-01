@@ -203,7 +203,7 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
       if (!bars.length) fail("arma sem barras de percentual");
       log("[interacoes] accordao de arma ok, " + bars.length + " barras de peca");
       if (!has(".sec-list li")) fail("agente sem lista de gadgets secundarios");
-      var chips = document.querySelectorAll(".g-ico");
+      var chips = document.querySelectorAll(".gadget-icone");
       log("[interacoes] itens de lista com icone: " + chips.length +
           " | slots de peca: " + document.querySelectorAll(".slot-block").length);
       if (!chips.length) fail("nenhum icone de lista renderizado no agente");
@@ -233,18 +233,18 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
     si.value = "ash";
     si.dispatchEvent(new Event("input", { bubbles: true }));
     setTimeout(function () {
-      log("[busca] hidden=" + box.hidden + " itens=" + box.querySelectorAll(".sr-item").length);
+      log("[busca] hidden=" + box.hidden + " itens=" + box.querySelectorAll(".busca-item").length);
       if (box.hidden) fail("busca global: caixa continua oculta");
       if (box.innerHTML.indexOf("Ash") === -1) fail("busca global nao achou 'ash'");
       si.value = "m4";
       si.dispatchEvent(new Event("input", { bubbles: true }));
       setTimeout(function () {
-        log("[busca] m4 -> itens=" + box.querySelectorAll(".sr-item").length);
-        if (!box.querySelector(".sr-item")) fail("busca global nao achou 'm4'");
+        log("[busca] m4 -> itens=" + box.querySelectorAll(".busca-item").length);
+        if (!box.querySelector(".busca-item")) fail("busca global nao achou 'm4'");
         si.value = "zzzqqq";
         si.dispatchEvent(new Event("input", { bubbles: true }));
         setTimeout(function () {
-          if (!box.querySelector(".sr-empty")) fail("busca global sem estado vazio");
+          if (!box.querySelector(".busca-vazia")) fail("busca global sem estado vazio");
           si.value = "";
           si.dispatchEvent(new Event("input", { bubbles: true }));
           filterStep();

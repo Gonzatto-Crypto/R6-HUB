@@ -1,37 +1,72 @@
 /* =========================================================
    R6 HUB - folha de estilo
    Tema: tatico escuro, acentos dourados (identidade R6)
+
+   COMO ESTE ARQUIVO ESTA ORGANIZADO
+     1. As cores e os tamanhos ficam todos no bloco :root do topo.
+        Para mudar o visual do site inteiro, mexa só ali.
+     2. As secoes estao separadas por um comentario com o nome da
+        parte da tela. Ache a parte que voce quer mudar e mexa ali.
+     3. Os nomes das classes seguem a mesma lingua do resto do
+        projeto: portugues e sem abreviacao.
+
+   QUALQUER COISA NUNCA APAGUE SEM OLHAR PRIMEIRO
+     - .avatar e .team-logo: sao os quadradinhos de imagem. Se voce
+       colocar um logotipo no lugar, o texto com as iniciais precisa
+       continuar aparecendo quando a imagem nao carregar.
+     - .dots: as bolinhas de vida e velocidade.
+     - .pill: as etiquetas coloridas de categoria das noticias.
    ========================================================= */
 
+/* =========================================================
+   1. CORES E TAMANHOS
+   É aqui que se muda o visual do site inteiro.
+   ========================================================= */
 :root {
-  --bg:        #0a0c10;
-  --bg-2:      #0f1319;
-  --panel:     #141a22;
-  --panel-2:   #1a222c;
-  --line:      #242d39;
-  --line-soft: #1c242e;
+  /* Fundos, do mais escuro para o mais claro */
+  --fundo:        #0a0c10;
+  --fundo-2:      #0f1319;
+  --caixa:        #141a22;
+  --caixa-2:      #1a222c;
+  --linha:        #242d39;
+  --linha-suave:  #1c242e;
 
-  --txt:       #e8ecf2;
-  --txt-2:     #9aa6b6;
-  --txt-3:     #6b7686;
+  /* Textos: normal, mais fraco e o mais fraco de todos */
+  --texto:        #e8ecf2;
+  --texto-2:      #9aa6b6;
+  --texto-3:      #6b7686;
 
-  --gold:      #f2c14e;
-  --gold-2:    #ffdd7a;
-  --atk:       #e2564a;
-  --def:       #4d8fd6;
-  --ok:        #4cc38a;
-  --warn:      #e8a33d;
-  --bad:       #d9534f;
+  /* Cores de destaque */
+  --dourado:      #f2c14e;   /* cor da marca do R6 */
+  --dourado-2:    #ffdd7a;
+  --atacante:     #e2564a;
+  --defensor:     #4d8fd6;
+  --certo:        #4cc38a;
+  --atencao:      #e8a33d;
+  --erro:         #d9534f;
 
-  --r-s: 4px;
-  --r-m: 8px;
-  --r-l: 14px;
+  /* As versoes claras das cores, para texto sobre fundo escuro */
+  --atacante-claro:  #ff8d82;
+  --defensor-claro:  #8dc0f2;
+  --certo-claro:     #7ee0b3;
 
-  --shadow: 0 10px 30px rgba(0,0,0,.45);
-  --wrap: 1320px;
+  /* As bordas coloridas das etiquetas */
+  --borda-dourada:  rgba(242,193,78,.40);
+  --borda-defensor: rgba(77,143,214,.40);
+  --borda-certa:    rgba(76,195,138,.40);
 
-  --font-d: "Barlow Condensed", "Segoe UI", system-ui, sans-serif;
-  --font-b: "Inter", "Segoe UI", system-ui, sans-serif;
+  /* Cantos arredondados: pequeno, medio e grande */
+  --canto-p: 4px;
+  --canto-m: 8px;
+  --canto-g: 14px;
+
+  --sombra: 0 10px 30px rgba(0,0,0,.45);
+
+  /* Largura maxima do conteudo do site */
+  --largura: 1320px;
+
+  --fonte-titulo: "Barlow Condensed", "Segoe UI", system-ui, sans-serif;
+  --fonte-texto:  "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -43,9 +78,9 @@ body {
   background:
     radial-gradient(1100px 600px at 80% -10%, rgba(242,193,78,.10), transparent 60%),
     radial-gradient(900px 500px at 5% 0%, rgba(77,143,214,.10), transparent 55%),
-    var(--bg);
-  color: var(--txt);
-  font-family: var(--font-b);
+    var(--fundo);
+  color: var(--texto);
+  font-family: var(--fonte-texto);
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -55,27 +90,31 @@ a { color: inherit; text-decoration: none; }
 img, svg { max-width: 100%; }
 button { font: inherit; cursor: pointer; }
 
-.wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 20px; }
+.wrap { width: 100%; max-width: var(--largura); margin: 0 auto; padding: 0 20px; }
 
+/* =========================================================
+   2. BARRA DO TOPO (logo, menu, busca, botão de 3 riscos)
+   ========================================================= */
+
+/* Atalho para pular direto para o conteudo, usando o teclado */
 .skip {
-  position: absolute; left: -9999px; top: 0; background: var(--gold);
+  position: absolute; left: -9999px; top: 0; background: var(--dourado);
   color: #000; padding: 10px 16px; z-index: 200; font-weight: 700;
 }
 .skip:focus { left: 8px; top: 8px; }
 
+/* O contorno dourado que aparece ao andar com o teclado */
 :where(a, button, input, [tabindex]):focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--dourado);
   outline-offset: 2px;
 }
 
-/* ---------------------------------------------- topo */
 .topbar {
   position: sticky; top: 0; z-index: 100;
   background: rgba(10,12,16,.92);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--linha);
 }
-
 .topbar-inner {
   display: flex; align-items: center; gap: 22px;
   height: 66px;
@@ -83,136 +122,180 @@ button { font: inherit; cursor: pointer; }
 
 .brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .brand-mark {
-  font-family: var(--font-d); font-weight: 700; font-size: 22px; letter-spacing: .5px;
+  font-family: var(--fonte-titulo); font-weight: 700; font-size: 22px; letter-spacing: .5px;
   width: 42px; height: 42px; display: grid; place-items: center;
-  background: linear-gradient(150deg, var(--gold), #b8860b);
-  color: #14100a; border-radius: var(--r-s);
+  background: linear-gradient(150deg, var(--dourado), #b8860b);
+  color: #14100a; border-radius: var(--canto-p);
   box-shadow: 0 4px 14px rgba(242,193,78,.28);
 }
 .brand-text {
-  font-family: var(--font-d); font-size: 24px; font-weight: 700;
+  font-family: var(--fonte-titulo); font-size: 24px; font-weight: 700;
   letter-spacing: 1.5px; line-height: 1;
   display: flex; flex-direction: column;
 }
 .brand-text em {
-  font-style: normal; font-family: var(--font-b);
+  font-style: normal; font-family: var(--fonte-texto);
   font-size: 9.5px; font-weight: 600; letter-spacing: 2.2px;
-  color: var(--txt-3); text-transform: uppercase; margin-top: 3px;
+  color: var(--texto-3); text-transform: uppercase; margin-top: 3px;
 }
 
 .nav { display: flex; gap: 4px; margin-left: auto; }
 .nav a {
-  padding: 8px 13px; border-radius: var(--r-m);
-  font-size: 13.5px; font-weight: 600; color: var(--txt-2);
+  padding: 8px 13px; border-radius: var(--canto-m);
+  font-size: 13.5px; font-weight: 600; color: var(--texto-2);
   white-space: nowrap; transition: .15s;
 }
-.nav a:hover { color: var(--txt); background: var(--panel); }
-.nav a.active { color: #14100a; background: var(--gold); }
+.nav a:hover { color: var(--texto); background: var(--caixa); }
+.nav a.active { color: #14100a; background: var(--dourado); }
 
 .search {
   display: flex; align-items: center; gap: 8px;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--r-m); padding: 0 11px; height: 38px;
+  background: var(--caixa); border: 1px solid var(--linha);
+  border-radius: var(--canto-m); padding: 0 11px; height: 38px;
   min-width: 240px;
 }
-.search:focus-within { border-color: var(--gold); }
-.search svg { width: 16px; height: 16px; fill: none; stroke: var(--txt-3); stroke-width: 2; flex: 0 0 auto; }
+.search:focus-within { border-color: var(--dourado); }
+.search svg { width: 16px; height: 16px; fill: none; stroke: var(--texto-3); stroke-width: 2; flex: 0 0 auto; }
 .search input {
-  background: none; border: 0; color: var(--txt);
+  background: none; border: 0; color: var(--texto);
   font: inherit; font-size: 13.5px; width: 100%; height: 100%;
 }
-.search input::placeholder { color: var(--txt-3); }
+.search input::placeholder { color: var(--texto-3); }
 .search input:focus { outline: none; }
 .search input::-webkit-search-cancel-button { filter: invert(.6); }
 
+/* A caixa de resultados que desce embaixo da busca */
 .search-results {
   position: absolute; left: 0; right: 0; top: 66px;
-  background: var(--bg-2); border-bottom: 1px solid var(--line);
-  box-shadow: var(--shadow); max-height: 70vh; overflow: auto;
+  background: var(--fundo-2); border-bottom: 1px solid var(--linha);
+  box-shadow: var(--sombra); max-height: 70vh; overflow: auto;
 }
-.sr-group { padding: 10px 0; }
-.sr-group + .sr-group { border-top: 1px solid var(--line-soft); }
-.sr-title {
-  font-family: var(--font-d); font-size: 12px; letter-spacing: 1.6px;
-  text-transform: uppercase; color: var(--txt-3); padding: 6px 20px;
+.busca-grupo { padding: 10px 0; }
+.busca-grupo + .busca-grupo { border-top: 1px solid var(--linha-suave); }
+.busca-titulo {
+  font-family: var(--fonte-titulo); font-size: 12px; letter-spacing: 1.6px;
+  text-transform: uppercase; color: var(--texto-3); padding: 6px 20px;
 }
-.sr-item {
+.busca-item {
   display: flex; align-items: center; gap: 12px; width: 100%;
-  padding: 9px 20px; background: none; border: 0; color: var(--txt);
+  padding: 9px 20px; background: none; border: 0; color: var(--texto);
   text-align: left; border-left: 2px solid transparent;
 }
-.sr-item:hover { background: var(--panel); border-left-color: var(--gold); }
-.sr-item .tag {
-  font-family: var(--font-d); font-size: 10px; letter-spacing: 1px;
+.busca-item:hover { background: var(--caixa); border-left-color: var(--dourado); }
+.busca-item small { color: var(--texto-3); font-size: 12px; }
+.busca-vazia { padding: 16px 20px; color: var(--texto-3); }
+
+/* A etiqueta ATK/DEF que aparece na busca e nos cards de operador */
+.etiqueta-lado {
+  font-family: var(--fonte-titulo); font-size: 10px; letter-spacing: 1px;
   padding: 1px 6px; border-radius: 3px; text-transform: uppercase; flex: 0 0 auto;
 }
-.tag.atk { background: rgba(226,86,74,.16); color: #ff8d82; }
-.tag.def { background: rgba(77,143,214,.16); color: #8dc0f2; }
-.sr-item small { color: var(--txt-3); font-size: 12px; }
-.sr-empty { padding: 16px 20px; color: var(--txt-3); }
+.etiqueta-lado.atk { background: rgba(226,86,74,.16); color: var(--atacante-claro); }
+.etiqueta-lado.def { background: rgba(77,143,214,.16); color: var(--defensor-claro); }
 
 .burger { display: none; background: none; border: 0; padding: 8px; }
-.burger span { display: block; width: 22px; height: 2px; background: var(--txt); margin: 4px 0; border-radius: 2px; }
+.burger span { display: block; width: 22px; height: 2px; background: var(--texto); margin: 4px 0; border-radius: 2px; }
 
-/* ---------------------------------------------- base */
+/* =========================================================
+   3. BASE (titulos, paragrafos, avisos)
+   ========================================================= */
 main { padding: 34px 20px 70px; min-height: 70vh; }
 
-h1, h2, h3, h4 { font-family: var(--font-d); font-weight: 600; letter-spacing: .4px; margin: 0; }
+h1, h2, h3, h4 { font-family: var(--fonte-titulo); font-weight: 600; letter-spacing: .4px; margin: 0; }
 h1 { font-size: clamp(30px, 4.4vw, 50px); line-height: 1.04; text-transform: uppercase; }
 h2 { font-size: clamp(22px, 2.6vw, 31px); text-transform: uppercase; }
 h3 { font-size: 20px; }
 p { margin: 0 0 12px; }
 
+/* O cabecalho de cada secao: texto a esquerda, botao a direita */
 .sec-head {
   display: flex; align-items: flex-end; gap: 14px;
   margin: 46px 0 18px; padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--linha);
 }
-.sec-head .kicker {
-  font-family: var(--font-d); font-size: 12px; letter-spacing: 2.4px;
-  text-transform: uppercase; color: var(--gold); display: block; margin-bottom: 3px;
+.sec-head .etiqueta {
+  font-family: var(--fonte-titulo); font-size: 12px; letter-spacing: 2.4px;
+  text-transform: uppercase; color: var(--dourado); display: block; margin-bottom: 3px;
 }
-.sec-head p { color: var(--txt-2); font-size: 13.5px; margin: 6px 0 0; max-width: 72ch; }
-.sec-head .spacer { margin-left: auto; }
+.sec-head p { color: var(--texto-2); font-size: 13.5px; margin: 6px 0 0; max-width: 72ch; }
+.sec-head .empurra { margin-left: auto; }
 
+/* O texto miudo em cima do titulo grande */
 .eyebrow {
-  font-family: var(--font-d); font-size: 12px; letter-spacing: 2.6px;
-  text-transform: uppercase; color: var(--gold);
+  font-family: var(--fonte-titulo); font-size: 12px; letter-spacing: 2.6px;
+  text-transform: uppercase; color: var(--dourado);
 }
 
-.muted { color: var(--txt-2); }
+.muted { color: var(--texto-2); }
 .small { font-size: 12.5px; }
 .mono { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; }
 
-/* ---------------------------------------------- botoes */
+/* A caixinha de aviso. Sem "info" ela fica amarela; com "info", azul. */
+.notice {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: rgba(232,163,61,.07); border: 1px solid rgba(232,163,61,.28);
+  border-radius: var(--canto-m); padding: 14px 16px; font-size: 13px; color: #f0d5a6;
+  margin: 18px 0;
+}
+.notice.info { background: rgba(77,143,214,.07); border-color: rgba(77,143,214,.28); color: #c3dcf5; }
+.notice b { color: #fff; }
+.aviso-icone { font-size: 16px; line-height: 1.3; flex: 0 0 auto; }
+
+/* A tela que aparece quando a busca nao acha nada */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--texto-3); }
+.empty-state b { display: block; font-family: var(--fonte-titulo); font-size: 26px; color: var(--texto-2); margin-bottom: 6px; }
+
+/* O caminho de migalhas: Inicio / Agentes / Ash */
+.crumbs {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 12.5px; color: var(--texto-3); margin-bottom: 18px;
+}
+.crumbs a { color: var(--texto-2); }
+.crumbs a:hover { color: var(--dourado); }
+
+/* =========================================================
+   4. BOTOES E ETIQUETAS CLICAVEIS
+   ========================================================= */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 18px; border-radius: var(--r-m);
-  font-size: 13.5px; font-weight: 700; border: 1px solid var(--line);
-  background: var(--panel); color: var(--txt);
+  padding: 10px 18px; border-radius: var(--canto-m);
+  font-family: var(--fonte-titulo); font-size: 15px; font-weight: 700;
+  border: 1px solid var(--linha);
+  background: var(--caixa); color: var(--texto);
   transition: .15s; text-transform: uppercase; letter-spacing: .5px;
-  font-family: var(--font-d); font-size: 15px;
 }
-.btn:hover { border-color: var(--gold); color: var(--gold); }
-.btn-primary { background: var(--gold); color: #14100a; border-color: var(--gold); }
-.btn-primary:hover { background: var(--gold-2); color: #14100a; }
+.btn:hover { border-color: var(--dourado); color: var(--dourado); }
+.btn.btn-primary { background: var(--dourado); color: #14100a; border-color: var(--dourado); }
+.btn.btn-primary:hover { background: var(--dourado-2); color: #14100a; }
 
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 12px; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--panel);
-  font-size: 12.5px; font-weight: 600; color: var(--txt-2);
+  border: 1px solid var(--linha); background: var(--caixa);
+  font-size: 12.5px; font-weight: 600; color: var(--texto-2);
   transition: .15s;
 }
-.chip:hover { border-color: var(--txt-3); color: var(--txt); }
-.chip.on { background: var(--gold); border-color: var(--gold); color: #14100a; }
+.chip:hover { border-color: var(--texto-3); color: var(--texto); }
+.chip.on { background: var(--dourado); border-color: var(--dourado); color: #14100a; }
 
-/* ---------------------------------------------- hero */
+/* As abas "Noticias / Balanceamentos" e "Times / Solo" */
+.tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--linha); }
+.tab {
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: 11px 18px; color: var(--texto-2); font-family: var(--fonte-titulo);
+  font-size: 17px; letter-spacing: 1.2px; text-transform: uppercase; transition: .15s;
+}
+.tab:hover { color: var(--texto); }
+.tab.on { color: var(--dourado); border-bottom-color: var(--dourado); }
+
+/* =========================================================
+   5. PAGINA INICIAL
+   ========================================================= */
 .hero {
   display: grid; grid-template-columns: 1.35fr .95fr; gap: 30px;
   padding: 34px; margin-bottom: 12px;
-  background: linear-gradient(135deg, var(--panel) 0%, var(--bg-2) 60%);
-  border: 1px solid var(--line); border-radius: var(--r-l);
+  background: linear-gradient(135deg, var(--caixa) 0%, var(--fundo-2) 60%);
+  border: 1px solid var(--linha); border-radius: var(--canto-g);
   position: relative; overflow: hidden;
 }
 .hero::after {
@@ -222,70 +305,80 @@ p { margin: 0 0 12px; }
   pointer-events: none;
 }
 .hero h1 { margin: 8px 0 14px; }
-.hero h1 span { color: var(--gold); }
-.hero p.lead { font-size: 16px; color: var(--txt-2); max-width: 60ch; }
-.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+.hero h1 span { color: var(--dourado); }
+.hero p.lead { font-size: 16px; color: var(--texto-2); max-width: 60ch; }
+.hero-acoes { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
 
+/* O cartao da direita, com a temporada atual */
 .season-card {
-  background: rgba(0,0,0,.32); border: 1px solid var(--line);
-  border-radius: var(--r-m); padding: 20px; position: relative; z-index: 1;
+  background: rgba(0,0,0,.32); border: 1px solid var(--linha);
+  border-radius: var(--canto-m); padding: 20px; position: relative; z-index: 1;
 }
 .season-card .sc-label {
-  font-family: var(--font-d); font-size: 12px; letter-spacing: 2.4px;
-  text-transform: uppercase; color: var(--txt-3);
+  font-family: var(--fonte-titulo); font-size: 12px; letter-spacing: 2.4px;
+  text-transform: uppercase; color: var(--texto-3);
 }
 .season-card .sc-name {
-  font-family: var(--font-d); font-size: 30px; line-height: 1.1; margin: 4px 0 2px;
+  font-family: var(--fonte-titulo); font-size: 30px; line-height: 1.1; margin: 4px 0 2px;
 }
-.season-card .sc-date { color: var(--gold); font-size: 13px; font-weight: 600; }
-.season-card hr { border: 0; border-top: 1px solid var(--line); margin: 14px 0; }
-.season-card ul { margin: 0; padding-left: 17px; color: var(--txt-2); font-size: 13px; }
+.season-card .sc-date { color: var(--dourado); font-size: 13px; font-weight: 600; }
+.season-card hr { border: 0; border-top: 1px solid var(--linha); margin: 14px 0; }
+.season-card ul { margin: 0; padding-left: 17px; color: var(--texto-2); font-size: 13px; }
 .season-card li { margin-bottom: 5px; }
 
+/* Os numeros grandes: 78 operadores, 116 armas e cia */
 .stats {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px; margin: 14px 0 4px;
 }
 .stat {
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--r-m); padding: 16px 18px;
+  background: var(--caixa); border: 1px solid var(--linha);
+  border-radius: var(--canto-m); padding: 16px 18px;
 }
 .stat b {
-  display: block; font-family: var(--font-d); font-size: 34px; line-height: 1;
-  color: var(--gold);
+  display: block; font-family: var(--fonte-titulo); font-size: 34px; line-height: 1;
+  color: var(--dourado);
 }
-.stat span { font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--txt-3); }
+.stat span { font-size: 11.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--texto-3); }
 
-.notice {
-  display: flex; gap: 12px; align-items: flex-start;
-  background: rgba(232,163,61,.07); border: 1px solid rgba(232,163,61,.28);
-  border-radius: var(--r-m); padding: 14px 16px; font-size: 13px; color: #f0d5a6;
-  margin: 18px 0;
+/* Duas colunas lado a lado na pagina inicial */
+.two-col { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; align-items: start; }
+.home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+
+/* As 6 posicoes do ranking na pagina inicial */
+.rank-teaser { display: grid; gap: 8px; }
+.rank-teaser .rt {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  background: var(--fundo-2); border: 1px solid var(--linha-suave); border-radius: var(--canto-p);
 }
-.notice.info { background: rgba(77,143,214,.07); border-color: rgba(77,143,214,.28); color: #c3dcf5; }
-.notice b { color: #fff; }
-.notice .n-ico { font-size: 16px; line-height: 1.3; flex: 0 0 auto; }
+.rank-teaser .rt .p { font-family: var(--fonte-titulo); font-size: 19px; color: var(--texto-3); width: 24px; }
+.rank-teaser .rt .n { font-weight: 600; font-size: 14px; }
+.rank-teaser .rt .r { font-size: 11.5px; color: var(--texto-3); }
 
-/* ---------------------------------------------- filtros */
+/* =========================================================
+   6. BARRA DE FILTROS
+   ========================================================= */
 .toolbar {
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--r-m); padding: 12px 14px; margin-bottom: 18px;
+  background: var(--caixa); border: 1px solid var(--linha);
+  border-radius: var(--canto-m); padding: 12px 14px; margin-bottom: 18px;
 }
-.toolbar .tb-label {
-  font-family: var(--font-d); font-size: 12px; letter-spacing: 1.8px;
-  text-transform: uppercase; color: var(--txt-3); margin-right: 2px;
+.filtro-rotulo {
+  font-family: var(--fonte-titulo); font-size: 12px; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--texto-3); margin-right: 2px;
 }
-.toolbar .divider { width: 1px; height: 22px; background: var(--line); }
-select, .tb-input {
-  background: var(--bg-2); color: var(--txt); border: 1px solid var(--line);
-  border-radius: var(--r-s); padding: 7px 10px; font: inherit; font-size: 13px;
+.toolbar .divider { width: 1px; height: 22px; background: var(--linha); }
+select, .filtro-campo {
+  background: var(--fundo-2); color: var(--texto); border: 1px solid var(--linha);
+  border-radius: var(--canto-p); padding: 7px 10px; font: inherit; font-size: 13px;
 }
-select:focus, .tb-input:focus { border-color: var(--gold); outline: none; }
-.tb-count { margin-left: auto; font-size: 12.5px; color: var(--txt-3); }
-.tb-count b { color: var(--gold); font-family: var(--font-d); font-size: 17px; }
+select:focus, .filtro-campo:focus { border-color: var(--dourado); outline: none; }
+.filtro-contagem { margin-left: auto; font-size: 12.5px; color: var(--texto-3); }
+.filtro-contagem b { color: var(--dourado); font-family: var(--fonte-titulo); font-size: 17px; }
 
-/* ---------------------------------------------- grade de agentes */
+/* =========================================================
+   7. CARDS (operadores e armas)
+   ========================================================= */
 .grid-ops {
   display: grid; gap: 12px;
   grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
@@ -297,368 +390,394 @@ select:focus, .tb-input:focus { border-color: var(--gold); outline: none; }
 
 .card {
   display: flex; flex-direction: column;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--r-m); overflow: hidden;
+  background: var(--caixa); border: 1px solid var(--linha);
+  border-radius: var(--canto-m); overflow: hidden;
   transition: transform .15s, border-color .15s, box-shadow .15s;
   position: relative;
 }
-.card:hover { transform: translateY(-3px); border-color: var(--txt-3); box-shadow: var(--shadow); }
+.card:hover { transform: translateY(-3px); border-color: var(--texto-3); box-shadow: var(--sombra); }
+
+/* A barrinha colorida de 3px na lateral esquerda do card */
 .card::before {
   content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
 }
-.card.atk::before { background: var(--atk); }
-.card.def::before { background: var(--def); }
+.card.atk::before { background: var(--atacante); }
+.card.def::before { background: var(--defensor); }
 
 .card-top {
   display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 12px;
 }
+
+/* O quadradinho de 52px com as iniciais do nome.
+   Se colocar uma imagem aqui, mantenha o texto como reserva. */
 .avatar {
-  width: 52px; height: 52px; flex: 0 0 auto; border-radius: var(--r-m);
-  display: grid; place-items: center;
-  font-family: var(--font-d); font-size: 23px; font-weight: 700;
+  width: 52px; height: 52px; flex: 0 0 auto; border-radius: var(--canto-m);
+  display: grid; place-items: center; overflow: hidden;
+  font-family: var(--fonte-titulo); font-size: 23px; font-weight: 700;
   background: linear-gradient(150deg, #26303d, #171d25);
-  border: 1px solid var(--line); color: var(--txt);
+  border: 1px solid var(--linha); color: var(--texto);
 }
 .card.atk .avatar { background: linear-gradient(150deg, #3a1f1c, #1d1412); }
 .card.def .avatar { background: linear-gradient(150deg, #172c40, #121a22); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
 .card-title { min-width: 0; flex: 1; }
 .card-title h3 {
   font-size: 19px; letter-spacing: .5px; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
 .card-title .sub {
-  font-size: 11.5px; color: var(--txt-3); letter-spacing: .4px;
+  font-size: 11.5px; color: var(--texto-3); letter-spacing: .4px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* A etiqueta ATK / DEF no canto do card */
 .side-badge {
-  font-family: var(--font-d); font-size: 10.5px; letter-spacing: 1.4px;
+  font-family: var(--fonte-titulo); font-size: 10.5px; letter-spacing: 1.4px;
   text-transform: uppercase; padding: 2px 7px; border-radius: 3px; flex: 0 0 auto;
 }
-.side-badge.atk { background: rgba(226,86,74,.16); color: #ff8d82; }
-.side-badge.def { background: rgba(77,143,214,.16); color: #8dc0f2; }
+.side-badge.atk { background: rgba(226,86,74,.16); color: var(--atacante-claro); }
+.side-badge.def { background: rgba(77,143,214,.16); color: var(--defensor-claro); }
 
 .card-body { padding: 0 14px 12px; }
 .gadget-line {
-  font-size: 12.8px; color: var(--txt-2);
-  border-top: 1px solid var(--line-soft); padding-top: 9px; margin-top: 2px;
+  font-size: 12.8px; color: var(--texto-2);
+  border-top: 1px solid var(--linha-suave); padding-top: 9px; margin-top: 2px;
 }
-.gadget-line b { color: var(--txt); font-weight: 600; display: block; font-size: 11px;
-  letter-spacing: 1.4px; text-transform: uppercase; color: var(--txt-3); margin-bottom: 2px; }
+.gadget-line b {
+  display: block; font-size: 11px; font-weight: 600;
+  letter-spacing: 1.4px; text-transform: uppercase; color: var(--texto-3); margin-bottom: 2px;
+}
 
 .card-foot {
   margin-top: auto; display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px; border-top: 1px solid var(--line-soft); background: rgba(0,0,0,.16);
+  padding: 10px 14px; border-top: 1px solid var(--linha-suave); background: rgba(0,0,0,.16);
 }
-.stat-mini { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--txt-2); }
-.stat-mini i { font-style: normal; font-size: 10px; letter-spacing: 1px; color: var(--txt-3); text-transform: uppercase; }
-.dots { display: inline-flex; gap: 2.5px; }
-.dots b { width: 5px; height: 11px; border-radius: 1px; background: var(--line); display: block; }
-.dots b.on { background: var(--gold); }
-.dots.atk b.on { background: var(--atk); }
-.dots.def b.on { background: var(--def); }
-.card-foot .sp { margin-left: auto; font-size: 11.5px; color: var(--txt-3); letter-spacing: 1.2px; text-transform: uppercase; font-family: var(--font-d); }
+.stat-mini { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--texto-2); }
+.stat-mini i { font-style: normal; font-size: 10px; letter-spacing: 1px; color: var(--texto-3); text-transform: uppercase; }
 
-/* ---------------------------------------------- arma */
-.w-card .wc-type {
-  font-family: var(--font-d); font-size: 11px; letter-spacing: 1.8px;
-  text-transform: uppercase; color: var(--gold);
+/* As bolinhas de vida e velocidade: 3 no maximo */
+.dots { display: inline-flex; gap: 2.5px; }
+.dots b { width: 5px; height: 11px; border-radius: 1px; background: var(--linha); display: block; }
+.dots b.on { background: var(--dourado); }
+.dots.atk b.on { background: var(--atacante); }
+.dots.def b.on { background: var(--defensor); }
+
+.card-foot .empurra {
+  margin-left: auto; font-size: 11.5px; color: var(--texto-3);
+  letter-spacing: 1.2px; text-transform: uppercase; font-family: var(--fonte-titulo);
 }
+
+/* As 4 caixas de numero do card de arma: dano, rpm, carregador, slots */
 .spec-row {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-  padding: 10px 14px; border-top: 1px solid var(--line-soft);
+  padding: 10px 14px; border-top: 1px solid var(--linha-suave);
 }
 .spec { text-align: center; }
-.spec b { display: block; font-family: var(--font-d); font-size: 16px; color: var(--txt); line-height: 1.1; }
-.spec span { font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase; color: var(--txt-3); }
+.spec b { display: block; font-family: var(--fonte-titulo); font-size: 16px; color: var(--texto); line-height: 1.1; }
+.spec span { font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase; color: var(--texto-3); }
+
+.w-card .wc-type {
+  font-family: var(--fonte-titulo); font-size: 11px; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--dourado);
+}
 .meta-flag {
   display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px;
-  letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-d);
-  color: var(--warn);
+  letter-spacing: 1px; text-transform: uppercase; font-family: var(--fonte-titulo);
+  color: var(--atencao);
 }
 
-/* ---------------------------------------------- pagina do agente */
+/* =========================================================
+   8. PAGINA DE UM OPERADOR
+   ========================================================= */
 .detail-hero {
   display: grid; grid-template-columns: auto 1fr; gap: 22px;
-  background: linear-gradient(120deg, var(--panel), var(--bg-2));
-  border: 1px solid var(--line); border-left: 4px solid var(--line);
-  border-radius: var(--r-l); padding: 24px; margin-bottom: 22px;
+  background: linear-gradient(120deg, var(--caixa), var(--fundo-2));
+  border: 1px solid var(--linha); border-left: 4px solid var(--linha);
+  border-radius: var(--canto-g); padding: 24px; margin-bottom: 22px;
 }
-.detail-hero.atk { border-left-color: var(--atk); }
-.detail-hero.def { border-left-color: var(--def); }
-.detail-hero .avatar { width: 92px; height: 92px; font-size: 40px; border-radius: var(--r-m); }
+.detail-hero.atk { border-left-color: var(--atacante); }
+.detail-hero.def { border-left-color: var(--defensor); }
+.detail-hero .avatar { width: 92px; height: 92px; font-size: 40px; }
 .detail-hero h1 { font-size: clamp(28px, 4vw, 44px); }
+
 .badges { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 14px; }
 .badge {
   font-size: 11.5px; font-weight: 600; letter-spacing: .4px;
   padding: 4px 10px; border-radius: 999px;
-  background: var(--panel-2); border: 1px solid var(--line); color: var(--txt-2);
+  background: var(--caixa-2); border: 1px solid var(--linha); color: var(--texto-2);
 }
-.badge b { color: var(--txt); }
-.badge.gold { border-color: rgba(242,193,78,.4); color: var(--gold-2); }
+.badge b { color: var(--texto); }
+.badge.gold { border-color: var(--borda-dourada); color: var(--dourado-2); }
 
+/* As caixas com titulo e linha divisoria (gadget, arma, listas) */
 .panes { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
 .pane {
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--r-m); padding: 18px;
+  background: var(--caixa); border: 1px solid var(--linha);
+  border-radius: var(--canto-m); padding: 18px;
 }
 .pane.full { grid-column: 1 / -1; }
 .pane h3 {
   display: flex; align-items: center; gap: 9px; margin-bottom: 12px;
-  font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+  font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--dourado);
 }
-.pane h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.pane p { font-size: 14px; color: var(--txt-2); }
-.pane .lead-big { font-size: 15px; color: var(--txt); }
+.pane h3::after { content: ""; flex: 1; height: 1px; background: var(--linha); }
+.pane p { font-size: 14px; color: var(--texto-2); }
+.pane .lead-big { font-size: 15px; color: var(--texto); }
 
 .gadget-box {
-  background: var(--bg-2); border: 1px solid var(--line);
-  border-left: 3px solid var(--gold); border-radius: var(--r-s);
+  background: var(--fundo-2); border: 1px solid var(--linha);
+  border-left: 3px solid var(--dourado); border-radius: var(--canto-p);
   padding: 13px 15px; margin-bottom: 10px;
 }
-.gadget-box h4 { font-size: 17px; color: var(--txt); margin-bottom: 4px; }
+.gadget-box h4 { font-size: 17px; color: var(--texto); margin-bottom: 4px; }
 .gadget-box p { margin: 0; font-size: 13.5px; }
-.gadget-box.unique { border-left-color: var(--def); }
+.gadget-box.unique { border-left-color: var(--defensor); }
 
+/* A lista de gadgets secundarios e de slots de peca */
 .sec-list { list-style: none; margin: 0; padding: 0; }
 .sec-list li {
   display: flex; gap: 10px; align-items: flex-start;
-  padding: 9px 0; border-bottom: 1px dashed var(--line-soft); font-size: 13.5px;
+  padding: 9px 0; border-bottom: 1px dashed var(--linha-suave); font-size: 13.5px;
 }
 .sec-list li:last-child { border-bottom: 0; }
-.sec-list .g-ico {
+.sec-list .gadget-icone {
   width: 22px; height: 22px; flex: 0 0 auto; border-radius: 4px;
-  background: var(--panel-2); border: 1px solid var(--line);
-  display: grid; place-items: center; font-size: 10px; color: var(--gold);
-  font-family: var(--font-d);
+  background: var(--caixa-2); border: 1px solid var(--linha);
+  display: grid; place-items: center; font-size: 10px; color: var(--dourado);
+  font-family: var(--fonte-titulo);
 }
 .sec-list b { display: block; }
-.sec-list small { color: var(--txt-3); font-size: 12.5px; }
+.sec-list small { color: var(--texto-3); font-size: 12.5px; }
 
-/* barras de % de peca */
+/* =========================================================
+   9. BARRAS DE PERCENTUAL DE PECA
+   ========================================================= */
 .slot-block { margin-bottom: 16px; }
 .slot-block:last-child { margin-bottom: 0; }
 .slot-name {
-  font-family: var(--font-d); font-size: 12px; letter-spacing: 1.8px;
-  text-transform: uppercase; color: var(--txt-3); margin-bottom: 8px;
+  font-family: var(--fonte-titulo); font-size: 12px; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--texto-3); margin-bottom: 8px;
   display: flex; align-items: center; gap: 8px;
 }
 .bar { margin-bottom: 9px; }
 .bar-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
 .bar-top b { font-weight: 600; }
-.bar-top span { color: var(--gold); font-family: var(--font-d); font-size: 15px; }
-.bar-track { height: 7px; background: var(--bg-2); border-radius: 4px; overflow: hidden; }
-.bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #d99f1f); border-radius: 4px; }
+.bar-top span { color: var(--dourado); font-family: var(--fonte-titulo); font-size: 15px; }
+.bar-track { height: 7px; background: var(--fundo-2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, var(--dourado), #d99f1f); border-radius: 4px; }
+
+/* A etiqueta de confianca (alta / media / baixa) */
 .conf {
   font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
-  padding: 1px 5px; border-radius: 3px; border: 1px solid var(--line);
-  color: var(--txt-3); font-family: var(--font-d);
+  padding: 1px 5px; border-radius: 3px; border: 1px solid var(--linha);
+  color: var(--texto-3); font-family: var(--fonte-titulo);
 }
-.conf.alta { color: var(--ok); border-color: rgba(76,195,138,.35); }
-.conf.media { color: var(--warn); border-color: rgba(232,163,61,.35); }
-.conf.baixa { color: var(--txt-3); }
+.conf.alta { color: var(--certo); border-color: rgba(76,195,138,.35); }
+.conf.media { color: var(--atencao); border-color: rgba(232,163,61,.35); }
+/* sem esta regra o .conf herdaria o dourado do .bar-top span */
+.conf.baixa { color: var(--texto-3); }
 
+/* =========================================================
+   10. AS ARMAS DO OPERADOR (as caixinhas que abrem e fecham)
+   ========================================================= */
 .weapon-rows { display: grid; gap: 10px; }
 .wrow {
-  border: 1px solid var(--line); border-radius: var(--r-s);
-  background: var(--bg-2); overflow: hidden;
+  border: 1px solid var(--linha); border-radius: var(--canto-p);
+  background: var(--fundo-2); overflow: hidden;
 }
 .wrow-head {
   display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 11px 14px; background: none; border: 0; color: var(--txt); text-align: left;
+  padding: 11px 14px; background: none; border: 0; color: var(--texto); text-align: left;
 }
-.wrow-head:hover { background: var(--panel-2); }
-.wrow-head .wname { font-family: var(--font-d); font-size: 17px; letter-spacing: .4px; }
+.wrow-head:hover { background: var(--caixa-2); }
+.wrow-head .wname { font-family: var(--fonte-titulo); font-size: 17px; letter-spacing: .4px; }
 .wrow-head .wtype {
   font-size: 10.5px; letter-spacing: 1.4px; text-transform: uppercase;
-  color: var(--txt-3); border: 1px solid var(--line); padding: 1px 6px; border-radius: 3px;
+  color: var(--texto-3); border: 1px solid var(--linha); padding: 1px 6px; border-radius: 3px;
 }
-.wrow-head .sp { margin-left: auto; color: var(--txt-3); font-size: 12px; }
-.wrow-head .arrow { transition: transform .18s; color: var(--txt-3); }
+.wrow-head .empurra { margin-left: auto; color: var(--texto-3); font-size: 12px; }
+.wrow-head .arrow { transition: transform .18s; color: var(--texto-3); }
 .wrow.open .arrow { transform: rotate(90deg); }
-.wrow-body { display: none; padding: 4px 14px 16px; border-top: 1px solid var(--line-soft); }
+.wrow-body { display: none; padding: 4px 14px 16px; border-top: 1px solid var(--linha-suave); }
 .wrow.open .wrow-body { display: block; }
 .wrow-stats {
   display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px;
-  color: var(--txt-2); padding: 12px 0;
+  color: var(--texto-2); padding: 12px 0;
 }
-.wrow-stats b { color: var(--txt); }
+.wrow-stats b { color: var(--texto); }
 
-/* ---------------------------------------------- noticias */
+/* =========================================================
+   11. NOTICIAS
+   ========================================================= */
 .news-list { display: grid; gap: 12px; }
 .news-card {
   display: grid; grid-template-columns: 96px 1fr; gap: 18px;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: var(--r-m); padding: 18px; transition: .15s;
+  background: var(--caixa); border: 1px solid var(--linha);
+  border-radius: var(--canto-m); padding: 18px; transition: .15s;
 }
-.news-card:hover { border-color: var(--txt-3); }
+.news-card:hover { border-color: var(--texto-3); }
 .news-date {
-  font-family: var(--font-d); text-align: center; border-right: 1px solid var(--line);
+  font-family: var(--fonte-titulo); text-align: center; border-right: 1px solid var(--linha);
   padding-right: 14px;
 }
-.news-date b { display: block; font-size: 30px; line-height: 1; color: var(--gold); }
-.news-date span { font-size: 11.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--txt-3); }
+.news-date b { display: block; font-size: 30px; line-height: 1; color: var(--dourado); }
+.news-date span { font-size: 11.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--texto-3); }
 .news-card h3 { font-size: 21px; margin-bottom: 6px; line-height: 1.2; }
-.news-card p { font-size: 13.8px; color: var(--txt-2); }
+.news-card p { font-size: 13.8px; color: var(--texto-2); }
 .news-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
 
+/* As etiquetas coloridas de categoria e status.
+   Sao 5 cores para varias categorias, por isso os grupos. */
 .pill {
-  font-family: var(--font-d); font-size: 11px; letter-spacing: 1.3px;
+  font-family: var(--fonte-titulo); font-size: 11px; letter-spacing: 1.3px;
   text-transform: uppercase; padding: 2px 9px; border-radius: 999px;
-  background: var(--panel-2); border: 1px solid var(--line); color: var(--txt-2);
+  background: var(--caixa-2); border: 1px solid var(--linha); color: var(--texto-2);
 }
-.pill.esports { border-color: rgba(242,193,78,.4); color: var(--gold-2); }
-.pill.balance { border-color: rgba(77,143,214,.4); color: #8dc0f2; }
-.pill.ranked { border-color: rgba(76,195,138,.4); color: #7ee0b3; }
-.pill.live { border-color: rgba(226,86,74,.4); color: #ff8d82; }
-.pill.buff { border-color: rgba(76,195,138,.4); color: #7ee0b3; }
-.pill.nerf { border-color: rgba(217,83,79,.45); color: #ff8d82; }
-.pill.mixed { border-color: rgba(242,193,78,.4); color: var(--gold-2); }
-.pill.fix { border-color: rgba(154,166,182,.4); color: var(--txt-2); }
-.pill.operator { border-color: rgba(242,193,78,.35); color: var(--gold-2); }
-.pill.announcement { border-color: rgba(154,166,182,.4); color: var(--txt-2); }
-.pill.community { border-color: rgba(154,166,182,.35); color: var(--txt-2); }
-.pill.season-launch { border-color: rgba(242,193,78,.4); color: var(--gold-2); }
-.pill.in-game-event { border-color: rgba(77,143,214,.4); color: #8dc0f2; }
-.pill.result { border-color: rgba(76,195,138,.4); color: #7ee0b3; }
-.pill.preseason { border-color: rgba(232,163,61,.4); color: var(--gold-2); }
-
-/* conteudo dos acordeoes de patch */
-.patch-body h4 {
-  font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase;
-  color: var(--gold); margin: 18px 0 8px;
+/* dourado: esports, inicio de temporada, mudancas mistas */
+.pill.esports, .pill.season-launch, .pill.mixed {
+  border-color: var(--borda-dourada); color: var(--dourado-2);
 }
-.patch-body h4:first-child { margin-top: 14px; }
-.patch-body ul { margin: 0 0 8px; padding-left: 18px; font-size: 13.2px; color: var(--txt-2); }
-.patch-body li { margin-bottom: 4px; }
-.patch-body details summary {
-  cursor: pointer; font-size: 12.5px; color: var(--txt-2);
-  padding: 7px 11px; border: 1px solid var(--line); border-radius: var(--r-s);
-  background: var(--bg-2); list-style: none;
+/* azul: eventos dentro do jogo */
+.pill.in-game-event { border-color: var(--borda-defensor); color: var(--defensor-claro); }
+/* verde: ranked, buffs e resultados */
+.pill.ranked, .pill.buff, .pill.result {
+  border-color: var(--borda-certa); color: var(--certo-claro);
 }
-.patch-body details summary::before { content: "\25B8  "; color: var(--gold); }
-.patch-body details[open] summary::before { content: "\25BE  "; }
-.patch-body details summary:hover { border-color: var(--gold); }
+/* vermelho: nerfs */
+.pill.nerf { border-color: rgba(217,83,79,.45); color: var(--atacante-claro); }
+/* cinza: anuncios, comunidade e pre-temporada */
+.pill.announcement, .pill.community, .pill.preseason {
+  border-color: rgba(154,166,182,.4); color: var(--texto-2);
+}
 
-.src-link { color: var(--txt-3); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
-.src-link:hover { color: var(--gold); }
-
-/* patches */
+/* =========================================================
+   12. PATCH NOTES (as caixinhas que abrem e fecham)
+   ========================================================= */
 .patch {
-  border: 1px solid var(--line); border-radius: var(--r-m);
-  background: var(--panel); margin-bottom: 10px; overflow: hidden;
+  border: 1px solid var(--linha); border-radius: var(--canto-m);
+  background: var(--caixa); margin-bottom: 10px; overflow: hidden;
 }
 .patch-head {
   display: flex; align-items: center; gap: 14px; width: 100%;
-  padding: 15px 18px; background: none; border: 0; color: var(--txt); text-align: left;
+  padding: 15px 18px; background: none; border: 0; color: var(--texto); text-align: left;
 }
-.patch-head:hover { background: var(--panel-2); }
+.patch-head:hover { background: var(--caixa-2); }
 .patch-ver {
-  font-family: var(--font-d); font-size: 21px; letter-spacing: .5px;
-  color: var(--gold); min-width: 78px;
+  font-family: var(--fonte-titulo); font-size: 21px; letter-spacing: .5px;
+  color: var(--dourado); min-width: 78px;
 }
-.patch-seen { font-size: 11.5px; color: var(--txt-3); letter-spacing: 1.2px; text-transform: uppercase; }
-.patch-title { font-size: 14.5px; color: var(--txt-2); }
-.patch-head .sp { margin-left: auto; }
-.patch-head .arrow { transition: transform .18s; color: var(--txt-3); flex: 0 0 auto; }
+.patch-seen { font-size: 11.5px; color: var(--texto-3); letter-spacing: 1.2px; text-transform: uppercase; }
+.patch-title { font-size: 14.5px; color: var(--texto-2); }
+.patch-head .empurra { margin-left: auto; }
+.patch-head .arrow { transition: transform .18s; color: var(--texto-3); flex: 0 0 auto; }
 .patch.open .arrow { transform: rotate(90deg); }
 .patch-body { display: none; padding: 0 18px 20px; }
 .patch.open .patch-body { display: block; }
 
+.patch-body h4 {
+  font-size: 12px; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--dourado); margin: 18px 0 8px;
+}
+.patch-body h4:first-child { margin-top: 14px; }
+.patch-body ul { margin: 0 0 8px; padding-left: 18px; font-size: 13.2px; color: var(--texto-2); }
+.patch-body li { margin-bottom: 4px; }
+.patch-body details summary {
+  cursor: pointer; font-size: 12.5px; color: var(--texto-2);
+  padding: 7px 11px; border: 1px solid var(--linha); border-radius: var(--canto-p);
+  background: var(--fundo-2); list-style: none;
+}
+.patch-body details summary::before { content: "\25B8  "; color: var(--dourado); }
+.patch-body details[open] summary::before { content: "\25BE  "; }
+.patch-body details summary:hover { border-color: var(--dourado); }
+
+/* =========================================================
+   13. TABELAS
+   ========================================================= */
 .tbl-scroll { overflow-x: auto; margin: 0 -18px; padding: 0 18px; }
 table { width: 100%; border-collapse: collapse; font-size: 13.2px; }
 th {
-  text-align: left; font-family: var(--font-d); font-size: 11.5px;
-  letter-spacing: 1.6px; text-transform: uppercase; color: var(--txt-3);
-  padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap;
+  text-align: left; font-family: var(--fonte-titulo); font-size: 11.5px;
+  letter-spacing: 1.6px; text-transform: uppercase; color: var(--texto-3);
+  padding: 8px 10px; border-bottom: 1px solid var(--linha); white-space: nowrap;
 }
-td { padding: 9px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--linha-suave); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: rgba(255,255,255,.02); }
-td.num { font-family: var(--font-d); font-size: 17px; color: var(--txt-3); width: 46px; }
+td.num { font-family: var(--fonte-titulo); font-size: 17px; color: var(--texto-3); width: 46px; }
 
-/* ---------------------------------------------- rankings */
-.tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
-.tab {
-  background: none; border: 0; border-bottom: 2px solid transparent;
-  padding: 11px 18px; color: var(--txt-2); font-family: var(--font-d);
-  font-size: 17px; letter-spacing: 1.2px; text-transform: uppercase; transition: .15s;
-}
-.tab:hover { color: var(--txt); }
-.tab.on { color: var(--gold); border-bottom-color: var(--gold); }
+/* =========================================================
+   14. RANKINGS
+   ========================================================= */
 
-.rank-medals b { font-family: var(--font-d); font-size: 22px; }
+/* A coluna com a posicao: ouro, prata e bronze no topo */
+.rank-medals b { font-family: var(--fonte-titulo); font-size: 22px; }
 .rank-1 b { color: #ffd45e; } .rank-2 b { color: #d5dbe4; } .rank-3 b { color: #d19a63; }
 
+/* A celula do time: logo a esquerda, nome e regiao a direita */
 .team-cell { display: flex; align-items: center; gap: 10px; }
+
+/* O quadradinho de 34px do time. Se colocar o logotipo oficial aqui,
+   mantenha as iniciais aparecendo quando a imagem nao carregar. */
 .team-logo {
-  width: 34px; height: 34px; border-radius: var(--r-s); flex: 0 0 auto;
-  display: grid; place-items: center; font-family: var(--font-d); font-size: 14px;
-  background: var(--panel-2); border: 1px solid var(--line); color: var(--txt-2);
+  width: 34px; height: 34px; border-radius: var(--canto-p); flex: 0 0 auto;
+  display: grid; place-items: center; overflow: hidden;
+  font-family: var(--fonte-titulo); font-size: 14px;
+  background: var(--caixa-2); border: 1px solid var(--linha); color: var(--texto-2);
 }
+.team-logo img { width: 100%; height: 100%; object-fit: contain; }
 .team-cell .tn { font-weight: 600; }
-.team-cell .tr { font-size: 11.5px; color: var(--txt-3); }
-.titles { margin: 4px 0 0; padding-left: 15px; font-size: 12.2px; color: var(--txt-2); }
+.team-cell .tr { font-size: 11.5px; color: var(--texto-3); }
+
+.titles { margin: 4px 0 0; padding-left: 15px; font-size: 12.2px; color: var(--texto-2); }
 .titles li { margin-bottom: 1px; }
 
-.rank-num { font-family: var(--font-d); font-size: 20px; color: var(--txt-3); }
-.mmr-na { color: var(--txt-3); font-size: 12px; font-style: italic; }
+/* O aviso de que nao existe MMR publico */
+.mmr-na { color: var(--texto-3); font-size: 12px; font-style: italic; }
 
+/* A caixinha que explica como ligar uma API de ranking */
 .expand-note {
-  background: var(--bg-2); border: 1px dashed var(--line);
-  border-radius: var(--r-s); padding: 12px 14px; font-size: 12.5px; color: var(--txt-2);
+  background: var(--fundo-2); border: 1px dashed var(--linha);
+  border-radius: var(--canto-p); padding: 12px 14px; font-size: 12.5px; color: var(--texto-2);
 }
 
-.two-col { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; align-items: start; }
+/* Link para a fonte original (patch notes, standings, wiki) */
+.src-link { color: var(--texto-3); font-size: 12px; text-decoration: underline; text-underline-offset: 2px; }
+.src-link:hover { color: var(--dourado); }
 
-/* ---------------------------------------------- home */
-.home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
-.rank-teaser { display: grid; gap: 8px; }
-.rank-teaser .rt {
-  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
-  background: var(--bg-2); border: 1px solid var(--line-soft); border-radius: var(--r-s);
-}
-.rank-teaser .rt .p { font-family: var(--font-d); font-size: 19px; color: var(--txt-3); width: 24px; }
-.rank-teaser .rt .n { font-weight: 600; font-size: 14px; }
-.rank-teaser .rt .r { font-size: 11.5px; color: var(--txt-3); }
-
-.crumbs {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: 12.5px; color: var(--txt-3); margin-bottom: 18px;
-}
-.crumbs a { color: var(--txt-2); }
-.crumbs a:hover { color: var(--gold); }
-
-.empty-state { text-align: center; padding: 60px 20px; color: var(--txt-3); }
-.empty-state b { display: block; font-family: var(--font-d); font-size: 26px; color: var(--txt-2); margin-bottom: 6px; }
-
-/* ---------------------------------------------- footer */
+/* =========================================================
+   15. RODAPE
+   ========================================================= */
 .footer {
-  border-top: 1px solid var(--line); background: var(--bg-2);
+  border-top: 1px solid var(--linha); background: var(--fundo-2);
   padding: 34px 0; margin-top: 40px;
 }
 .footer-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 26px; }
 .footer h4 {
   font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 10px;
+  color: var(--dourado); margin-bottom: 10px;
 }
-.footer p, .footer li { font-size: 12.8px; color: var(--txt-3); }
+.footer p, .footer li { font-size: 12.8px; color: var(--texto-3); }
 .footer ul { margin: 0; padding-left: 16px; }
 .footer li { margin-bottom: 5px; }
-.footer a { color: var(--txt-2); text-decoration: underline; text-underline-offset: 2px; }
-.footer a:hover { color: var(--gold); }
+.footer a { color: var(--texto-2); text-decoration: underline; text-underline-offset: 2px; }
+.footer a:hover { color: var(--dourado); }
 
-/* ---------------------------------------------- responsivo */
+/* =========================================================
+   16. CELULAR E TABLET
+   ========================================================= */
 @media (max-width: 1080px) {
   .hero { grid-template-columns: 1fr; }
   .two-col { grid-template-columns: 1fr; }
   .panes { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 900px) {
   .nav {
     position: fixed; inset: 66px 0 auto 0; flex-direction: column;
-    background: var(--bg-2); border-bottom: 1px solid var(--line);
+    background: var(--fundo-2); border-bottom: 1px solid var(--linha);
     padding: 10px 20px 18px; gap: 2px; margin: 0;
-    display: none; box-shadow: var(--shadow);
+    display: none; box-shadow: var(--sombra);
   }
   .nav.open { display: flex; }
   .nav a { padding: 12px 14px; font-size: 15px; }
@@ -669,17 +788,19 @@ td.num { font-family: var(--font-d); font-size: 17px; color: var(--txt-3); width
   .search:not(:focus-within) input { display: none; }
   .brand { margin-right: auto; }
 }
+
 @media (max-width: 620px) {
   main { padding: 22px 16px 60px; }
   .hero { padding: 22px; }
   .detail-hero { grid-template-columns: 1fr; }
   .news-card { grid-template-columns: 1fr; }
-  .news-date { border-right: 0; border-bottom: 1px solid var(--line); padding: 0 0 10px; display: flex; align-items: baseline; gap: 8px; }
+  .news-date { border-right: 0; border-bottom: 1px solid var(--linha); padding: 0 0 10px; display: flex; align-items: baseline; gap: 8px; }
   .spec-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .toolbar { gap: 7px; }
   .toolbar .divider { display: none; }
 }
 
+/* Respeita quem pediu no sistema para nao ver animacoes */
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
   html { scroll-behavior: auto; }
