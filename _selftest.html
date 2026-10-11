@@ -165,10 +165,10 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
       var ex = document.getElementById("expand-all");
       for (var q2 = 0; q2 < ps.length; q2++) ps[q2].classList.remove("open");
       ex.click();
-      if (ex.textContent !== "Recolher tudo") fail("expandir tudo nao virou 'Recolher tudo' (" + ex.textContent + ")");
+      if (ex.textContent !== "Collapse all") fail("expand all did not become 'Collapse all' (" + ex.textContent + ")");
       if (!ps[0].classList.contains("open")) fail("expandir tudo nao abriu o patch 0");
       ex.click();
-      if (ex.textContent !== "Expandir tudo") fail("recolher tudo nao voltou (" + ex.textContent + ")");
+      if (ex.textContent !== "Expand all") fail("collapse all did not revert (" + ex.textContent + ")");
       if (ps[0].classList.contains("open")) fail("recolher tudo nao fechou o patch 0");
       log("[interacoes] patches: " + ps.length + ", expandir/recolher tudo ok");
       next();

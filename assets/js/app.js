@@ -75,12 +75,12 @@
     return '<div class="avatar">' +
       '<span class="avatar-letras">' + escapar(iniciais(operador.name)) + "</span>" +
       '<img src="' + escapar(arquivoDoOperador(operador.name)) + '" alt="' +
-        escapar("Retrato do operador " + operador.name) + '" loading="lazy" decoding="async" onerror="this.remove()">' +
+        escapar("Portrait of operator " + operador.name) + '" loading="lazy" decoding="async" onerror="this.remove()">' +
     "</div>";
   }
 
-  var NOMES_DOS_MESES = ["jan", "fev", "mar", "abr", "mai", "jun",
-                         "jul", "ago", "set", "out", "nov", "dez"];
+  var NOMES_DOS_MESES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   /* "2026-09-22" vira "22 set 2026" */
   function formatarData(dataISO) {
@@ -102,7 +102,7 @@
   /* Prepara um texto para entrar dentro de um link (#/agente/...) */
   function codificarParaLink(valor) { return encodeURIComponent(String(valor)); }
 
-  function nomeDoLado(lado) { return lado === "ATK" ? "Atacante" : "Defensor"; }
+  function nomeDoLado(lado) { return lado === "ATK" ? "Attacker" : "Defender"; }
   function siglaDoLado(lado) { return lado === "ATK" ? "ATK" : "DEF"; }
 
   /* Procura um Operador pelo id. Devolve null se nao achar. */
@@ -122,25 +122,25 @@
      para o portugues que aparece na tela. */
   var TRADUCAO_CATEGORIA = {
     "esports": "Esports",
-    "season-launch": "Inicio de temporada",
-    "in-game-event": "Evento in-game",
+    "season-launch": "Season launch",
+    "in-game-event": "In-game event",
     "ranked": "Ranked",
-    "announcement": "Anuncio",
-    "community": "Comunidade"
+    "announcement": "Announcement",
+    "community": "Community"
   };
   var TRADUCAO_STATUS = {
-    "live": "ao vivo",
-    "announcement": "anuncio",
-    "preseason": "pre-temporada",
-    "result": "resultado"
+    "live": "live",
+    "announcement": "announcement",
+    "preseason": "pre-season",
+    "result": "result"
   };
   var TRADUCAO_SLOT = {
-    mira: "Mira / Luneta",
-    under: "Sousbarrel",
+    mira: "Sight / Scope",
+    under: "Under-barrel",
     grip: "Grip",
-    cano: "Cano / Boca"
+    cano: "Barrel / Muzzle"
   };
-  var TRADUCAO_CONFIANCA = { alta: "confianca alta", media: "confianca media", baixa: "confianca baixa" };
+  var TRADUCAO_CONFIANCA = { alta: "high confidence", media: "medium confidence", baixa: "low confidence" };
 
   function nomeDaCategoria(chave) { return TRADUCAO_CATEGORIA[chave] || chave; }
   function nomeDoStatus(chave) { return TRADUCAO_STATUS[chave] || chave; }
@@ -160,7 +160,7 @@
 
   /* Etiqueta colorida que diz se a mudanca foi buff, nerf ou mista. */
   function etiquetaDirecao(direcao) {
-    var texto = direcao === "buff" ? "Buff" : direcao === "nerf" ? "Nerf" : "Misto";
+    var texto = direcao === "buff" ? "Buff" : direcao === "nerf" ? "Nerf" : "Mixed";
     return '<span class="pill ' + (direcao || "mixed") + '">' + texto + "</span>";
   }
 
@@ -262,10 +262,10 @@
         '<div class="sub">' + escapar(operador.unit) + " &middot; " + escapar(operador.region) + "</div></div>" +
         '<span class="side-badge ' + classeDoLado + '">' + siglaDoLado(operador.side) + "</span>" +
       "</div>" +
-      '<div class="card-body"><div class="gadget-line"><b>Gadget principal</b>' + escapar(operador.gadget) + "</div></div>" +
+      '<div class="card-body"><div class="gadget-line"><b>Main gadget</b>' + escapar(operador.gadget) + "</div></div>" +
       '<div class="card-foot">' +
-        '<span class="stat-mini"><i>vida</i>' + bolinhas(bolinhasDeVida) + operador.health + "</span>" +
-        '<span class="stat-mini"><i>vel</i>' + bolinhas(operador.speed, classeDoLado) + operador.speed + "</span>" +
+        '<span class="stat-mini"><i>hp</i>' + bolinhas(bolinhasDeVida) + operador.health + "</span>" +
+        '<span class="stat-mini"><i>spd</i>' + bolinhas(operador.speed, classeDoLado) + operador.speed + "</span>" +
         '<span class="empurra">' + escapar(operador.roles.map(nomeDaFuncao).join(" / ")) + "</span>" +
       "</div></a>";
   }
@@ -278,13 +278,13 @@
         '<h3 style="margin-top:2px">' + escapar(arma.name) + "</h3>" +
       "</div></div>" +
       '<div class="spec-row">' +
-        '<div class="spec"><b>' + escapar(arma.damage) + '</b><span>dano</span></div>' +
+        '<div class="spec"><b>' + escapar(arma.damage) + '</b><span>damage</span></div>' +
         '<div class="spec"><b>' + escapar(arma.rpm) + '</b><span>rpm</span></div>' +
-        '<div class="spec"><b>' + escapar(arma.magazine) + '</b><span>carreg.</span></div>' +
+        '<div class="spec"><b>' + escapar(arma.magazine) + '</b><span>mag</span></div>' +
         '<div class="spec"><b>' + arma.slots.length + '</b><span>slots</span></div>' +
       "</div>" +
-      '<div class="card-foot"><span class="meta-flag">' + (arma.meta ? "meta de pecas" : "sem meta") + "</span>" +
-      '<span class="empurra">ver</span></div></a>';
+      '<div class="card-foot"><span class="meta-flag">' + (arma.meta ? "attachment meta" : "no meta") + "</span>" +
+      '<span class="empurra">view</span></div></a>';
   }
 
   /* =================================================================
@@ -310,49 +310,49 @@
     /* Faixa do topo */
     html += '<section class="hero">' +
       "<div>" +
-        '<span class="eyebrow">Hub de comunidade &middot; dados de ' + escapar(formatarData(CONFIG.snapshot)) + "</span>" +
-        "<h1>Rainbow Six <span>Siege</span> em um so lugar</h1>" +
-        '<p class="lead">Os ' + DADOS.operators.length + ' operadores com gadget principal, gadgets secundarios, ' +
-        "habilidade unica e armas, com o percentual estimado das pecas mais usadas. Mais as patch notes oficiais, " +
-        "noticias do jogo e os rankings.</p>" +
+        '<span class="eyebrow">Community hub &middot; data from ' + escapar(formatarData(CONFIG.snapshot)) + "</span>" +
+        "<h1>Rainbow Six <span>Siege</span> all in one place</h1>" +
+        '<p class="lead">All ' + DADOS.operators.length + ' operators with their main gadget, secondary gadgets, ' +
+        "unique ability and weapons, plus the estimated usage of the most popular attachments. Also the official patch notes, " +
+        "game news and rankings.</p>" +
         '<div class="hero-acoes">' +
-          '<a class="btn btn-primary" href="#/agentes">Ver os ' + DADOS.operators.length + " operadores</a>" +
-          '<a class="btn" href="#/armas">Catalogo de armas</a>' +
-          '<a class="btn" href="#/noticias">Balanceamentos</a>' +
+          '<a class="btn btn-primary" href="#/agentes">View the ' + DADOS.operators.length + " operators</a>" +
+          '<a class="btn" href="#/armas">Weapons catalog</a>' +
+          '<a class="btn" href="#/noticias">Balance changes</a>' +
         "</div>" +
       "</div>" +
       '<div class="season-card">' +
-        '<span class="sc-label">Temporada atual</span>' +
+        '<span class="sc-label">Current season</span>' +
         '<div class="sc-name">' + escapar(temporadaAtual.name) + "</div>" +
-        '<div class="sc-date">' + escapar(temporadaAtual.label) + " &middot; desde " + escapar(formatarData(temporadaAtual.startedAt)) + "</div>" +
+        '<div class="sc-date">' + escapar(temporadaAtual.label) + " &middot; since " + escapar(formatarData(temporadaAtual.startedAt)) + "</div>" +
         "<hr>" +
         "<ul>" +
-          "<li><b>Patch mais recente:</b> " + escapar(ultimosPatches[0].version) + " (" + escapar(formatarData(ultimosPatches[0].date)) + ")</li>" +
-          "<li><b>Operador novo:</b> " + escapar(ultimosOperadores[0].name) + " &mdash; " + escapar(ultimosOperadores[0].gadget) + "</li>" +
-          "<li><b>" + balanceamentos.patches.length + "</b> patches de balanceamento mapeados</li>" +
-          "<li><b>Proximo evento:</b> " + escapar(DADOS.rankings.circuit.majorNext.name) + "</li>" +
+          "<li><b>Latest patch:</b> " + escapar(ultimosPatches[0].version) + " (" + escapar(formatarData(ultimosPatches[0].date)) + ")</li>" +
+          "<li><b>New operator:</b> " + escapar(ultimosOperadores[0].name) + " &mdash; " + escapar(ultimosOperadores[0].gadget) + "</li>" +
+          "<li><b>" + balanceamentos.patches.length + "</b> balance patches mapped</li>" +
+          "<li><b>Next event:</b> " + escapar(DADOS.rankings.circuit.majorNext.name) + "</li>" +
         "</ul>" +
       "</div>" +
     "</section>";
 
     /* Números grandes */
     html += '<div class="stats">' +
-      '<div class="stat"><b>' + DADOS.operators.length + "</b><span>operadores</span></div>" +
-      '<div class="stat"><b>' + totalAtacantes + " / " + totalDefensores + "</b><span>atacantes / defensores</span></div>" +
-      '<div class="stat"><b>' + DADOS.weapons.length + "</b><span>armas no catalogo</span></div>" +
-      '<div class="stat"><b>' + Object.keys(DADOS.attachmentEffects).length + "</b><span>tipos de peca</span></div>" +
+      '<div class="stat"><b>' + DADOS.operators.length + "</b><span>operators</span></div>" +
+      '<div class="stat"><b>' + totalAtacantes + " / " + totalDefensores + "</b><span>attackers / defenders</span></div>" +
+      '<div class="stat"><b>' + DADOS.weapons.length + "</b><span>weapons in catalog</span></div>" +
+      '<div class="stat"><b>' + Object.keys(DADOS.attachmentEffects).length + "</b><span>attachment types</span></div>" +
       '<div class="stat"><b>' + balanceamentos.patches.length + "</b><span>patches</span></div>" +
     "</div>";
 
     /* Aviso sobre os percentuais serem estimativas */
     html += aviso(
-      "<b>Sobre os percentuais de pecas:</b> a Ubisoft nao publica o numero de uso de pecas. " +
-      "Todos os percentuais deste site sao <b>estimativas da comunidade</b> " +
-      "(guias, Reddit e jogadores profissionais), com um indicador de confianca em cada item. " +
-      "Os numeros de dano das armas e os balanceamentos vem das notas oficiais da Ubisoft.");
+      "<b>About the attachment percentages:</b> Ubisoft does not publish attachment usage numbers. " +
+      "All percentages on this site are <b>community estimates</b> " +
+      "(guides, Reddit and pro players), with a confidence indicator on each item. " +
+      "Weapon damage numbers and balance changes come from Ubisoft's official notes.");
 
     /* Operadores recém-chegados */
-    html += cabecalhoDeSecao("Destaque", "Operadores lancados recentemente", "Gadgets assinatura das ultimas temporadas.");
+    html += cabecalhoDeSecao("Featured", "Recently released operators", "Signature gadgets from recent seasons.");
     html += '<div class="grid-ops">';
     ultimosOperadores.forEach(function (lancamento) {
       var operador = DADOS.operators.filter(function (item) {
@@ -371,8 +371,8 @@
     html += "</div>";
 
     /* Últimos balanceamentos */
-    html += cabecalhoDeSecao("Balanceamento", "Ultimas patch notes", "Numeros oficiais direto das notas da Ubisoft.",
-      '<a class="btn" href="#/noticias?tab=balanceamentos">Ver todas</a>');
+    html += cabecalhoDeSecao("Balance", "Latest patch notes", "Official numbers straight from Ubisoft's notes.",
+      '<a class="btn" href="#/noticias?tab=balanceamentos">View all</a>');
     html += '<div class="home-grid">';
     ultimosPatches.forEach(function (patch) {
       html += '<div class="card"><div class="card-top"><div class="card-title">' +
@@ -380,7 +380,7 @@
         '<h3 style="margin-top:2px">' + escapar(formatarData(patch.date)) + "</h3>" +
         '<div class="sub">' + escapar(patch.headline || "") + "</div></div></div>" +
         '<div class="card-body"><div class="gadget-line">' +
-        (patch.balance || []).length + " mudancas de balanceamento</div></div>" +
+        (patch.balance || []).length + " balance changes</div></div>" +
         '<div class="card-foot"><span class="empurra" style="margin:0">' + escapar(patch.season) + "</span></div></div>";
     });
     html += "</div>";
@@ -388,12 +388,12 @@
     /* Notícias e ranking, lado a lado */
     html += '<div class="two-col" style="margin-top:34px">';
 
-    html += "<div>" + cabecalhoDeSecao("Noticias", "Ultimas noticias", "",
-      '<a class="btn" href="#/noticias">Ver todas</a>') +
+    html += "<div>" + cabecalhoDeSecao("News", "Latest news", "",
+      '<a class="btn" href="#/noticias">View all</a>') +
       listaDeNoticias((DADOS.news.items || []).slice(0, 4), true) + "</div>";
 
-    html += "<div>" + cabecalhoDeSecao("Ranking", "Times no topo",
-      "Pontos oficiais de qualificacao para o SI 2027.", '<a class="btn" href="#/rankings">Ver ranking</a>') +
+    html += "<div>" + cabecalhoDeSecao("Ranking", "Top teams",
+      "Official qualification points for SI 2027.", '<a class="btn" href="#/rankings">View ranking</a>') +
       '<div class="rank-teaser">' + DADOS.rankings.teams.slice(0, 6).map(function (time, indice) {
         return '<div class="rt"><span class="p">' + (indice + 1) + '</span><div><div class="n">' + escapar(time.name) +
           '</div><div class="r">' + escapar(time.region) + " &middot; " + time.siPoints + " pts SI</div></div></div>";
@@ -464,38 +464,38 @@
                     filtros.speed || filtros.health || filtros.year || filtros.q;
 
     var html = "";
-    html += cabecalhoDeSecao("Operadores", "Os " + DADOS.operators.length + " agentes",
-      "Gadget principal, gadgets secundarios, habilidade unica e armas de cada operador.");
-    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Agentes" }]);
+    html += cabecalhoDeSecao("Operators", "The " + DADOS.operators.length + " operators",
+      "Main gadget, secondary gadgets, unique ability and weapons for each operator.");
+    html += migalhas([{ texto: "Home", link: "#/" }, { texto: "Operators" }]);
 
     /* Barra de filtros */
     html += '<div class="toolbar">' +
-      '<span class="filtro-rotulo">Filtros</span>' +
-      '<select id="f-side" aria-label="Lado">' + opcoes(["ATK", "DEF"], filtros.side, "Todos os lados") + "</select>" +
-      '<select id="f-role" aria-label="Funcao">' + opcoes(DADOS.roles.map(function (funcao) { return funcao.id; }), filtros.role, "Todas as funcoes") + "</select>" +
-      '<select id="f-ctu" aria-label="CTU">' + opcoes(unidades, filtros.ctu, "Todas as CTUs") + "</select>" +
-      '<select id="f-speed" aria-label="Velocidade">' + opcoes([1, 2, 3], filtros.speed, "Qualquer velocidade") + "</select>" +
-      '<select id="f-health" aria-label="Vida">' + opcoes([100, 110, 125], filtros.health, "Qualquer vida") + "</select>" +
-      '<select id="f-year" aria-label="Ano">' + opcoes(anos, filtros.year, "Qualquer ano") + "</select>" +
+      '<span class="filtro-rotulo">Filters</span>' +
+      '<select id="f-side" aria-label="Side">' + opcoes(["ATK", "DEF"], filtros.side, "All sides") + "</select>" +
+      '<select id="f-role" aria-label="Role">' + opcoes(DADOS.roles.map(function (funcao) { return funcao.id; }), filtros.role, "All roles") + "</select>" +
+      '<select id="f-ctu" aria-label="CTU">' + opcoes(unidades, filtros.ctu, "All CTUs") + "</select>" +
+      '<select id="f-speed" aria-label="Speed">' + opcoes([1, 2, 3], filtros.speed, "Any speed") + "</select>" +
+      '<select id="f-health" aria-label="Health">' + opcoes([100, 110, 125], filtros.health, "Any health") + "</select>" +
+      '<select id="f-year" aria-label="Year">' + opcoes(anos, filtros.year, "Any year") + "</select>" +
       '<div class="divider"></div>' +
-      '<input class="filtro-campo" id="f-q" type="search" placeholder="Buscar no filtro..." value="' +
-        escapar(filtros.q || "") + '" aria-label="Buscar no filtro">' +
-      '<span class="filtro-contagem"><b>' + lista.length + "</b> de " + DADOS.operators.length + "</span>" +
-      (temFiltro ? '<a class="btn" href="#/agentes">Limpar</a>' : "") +
+      '<input class="filtro-campo" id="f-q" type="search" placeholder="Search filters..." value="' +
+        escapar(filtros.q || "") + '" aria-label="Search filters">' +
+      '<span class="filtro-contagem"><b>' + lista.length + "</b> of " + DADOS.operators.length + "</span>" +
+      (temFiltro ? '<a class="btn" href="#/agentes">Clear</a>' : "") +
     "</div>";
 
     if (!lista.length) {
-      html += '<div class="empty-state"><b>Nenhum operador encontrado</b>Tente remover algum filtro.</div>';
+      html += '<div class="empty-state"><b>No operators found</b>Try removing a filter.</div>';
     } else {
       html += '<div class="grid-ops">' + lista.map(cartaoDoOperador).join("") + "</div>";
     }
 
     /* Explicação do pool de gadgets secundários */
-    html += cabecalhoDeSecao("Referencia", "Pool de gadgets secundarios",
-      "Gadgets de escolha livre que cada operador carrega alem do gadget assinatura. Isso muda entre temporadas: confira o patch atual.");
+    html += cabecalhoDeSecao("Reference", "Secondary gadget pool",
+      "Free-choice gadgets each operator carries in addition to the signature gadget. This changes between seasons: check the current patch.");
     html += '<div class="panes">';
     ["ATK", "DEF"].forEach(function (lado) {
-      html += '<div class="pane"><h3>' + (lado === "ATK" ? "Pool de atacante" : "Pool de defensor") + "</h3><ul class='sec-list'>";
+      html += '<div class="pane"><h3>' + (lado === "ATK" ? "Attacker pool" : "Defender pool") + "</h3><ul class='sec-list'>";
       DADOS.gadgetPool[lado].forEach(function (gadget) {
         html += "<li><span class='gadget-icone'>" + (lado === "ATK" ? "A" : "D") + "</span><div><b>" +
           escapar(gadget.name) + "</b><small>" + escapar(gadget.description) + "</small></div></li>";
@@ -513,7 +513,7 @@
   function paginaOperador(id) {
     var operador = acharOperador(id);
     if (!operador) {
-      return '<div class="empty-state"><b>Operador nao encontrado</b><a href="#/agentes">Voltar para a lista</a></div>';
+      return '<div class="empty-state"><b>Operator not found</b><a href="#/agentes">Back to the list</a></div>';
     }
 
     var classeDoLado = operador.side === "ATK" ? "atk" : "def";
@@ -524,8 +524,8 @@
     var html = "";
 
     html += migalhas([
-      { texto: "Inicio", link: "#/" },
-      { texto: "Agentes", link: "#/agentes" },
+      { texto: "Home", link: "#/" },
+      { texto: "Operators", link: "#/agentes" },
       { texto: operador.name }
     ]);
 
@@ -536,9 +536,9 @@
         "<h1>" + escapar(operador.name) + "</h1>" +
         '<div class="badges">' +
           '<span class="badge">' + escapar(operador.region) + "</span>" +
-          '<span class="badge">lancado em <b>' + operador.year + "</b></span>" +
-          '<span class="badge">vida <b>' + operador.health + "</b> " + bolinhas(bolinhasDeVida) + "</span>" +
-          '<span class="badge">velocidade <b>' + operador.speed + "</b> " + bolinhas(operador.speed, classeDoLado) + "</span>" +
+          '<span class="badge">released in <b>' + operador.year + "</b></span>" +
+          '<span class="badge">health <b>' + operador.health + "</b> " + bolinhas(bolinhasDeVida) + "</span>" +
+          '<span class="badge">speed <b>' + operador.speed + "</b> " + bolinhas(operador.speed, classeDoLado) + "</span>" +
           operador.roles.map(function (funcao) {
             return '<span class="badge gold">' + escapar(nomeDaFuncao(funcao)) + "</span>";
           }).join("") +
@@ -550,17 +550,17 @@
     html += '<div class="panes">';
 
     /* Gadget principal */
-    html += '<div class="pane"><h3>Gadget principal</h3>' +
+    html += '<div class="pane"><h3>Main gadget</h3>' +
       '<div class="gadget-box"><h4>' + escapar(operador.gadget) + "</h4><p>" + escapar(operador.gadgetDescription) + "</p></div>" +
-      '<p class="small muted" style="margin:0">Classe do gadget: <b>' + escapar(operador.gadgetType) + "</b></p></div>";
+      '<p class="small muted" style="margin:0">Gadget class: <b>' + escapar(operador.gadgetType) + "</b></p></div>";
 
     /* Habilidade única */
-    html += '<div class="pane"><h3>Habilidade unica</h3>' +
+    html += '<div class="pane"><h3>Unique ability</h3>' +
       '<div class="gadget-box unique"><p class="lead-big">' + escapar(operador.uniqueAbility) + "</p></div>" +
-      '<p class="small muted" style="margin:0">E o que separa este operador de todos os outros do mesmo lado.</p></div>';
+      '<p class="small muted" style="margin:0">This is what sets this operator apart from everyone else on the same side.</p></div>';
 
     /* Gadgets secundários */
-    html += '<div class="pane"><h3>Gadgets secundarios (' + operador.secondaryGadgets.length + ")</h3><ul class='sec-list'>";
+    html += '<div class="pane"><h3>Secondary gadgets (' + operador.secondaryGadgets.length + ")</h3><ul class='sec-list'>";
     operador.secondaryGadgets.forEach(function (nomeDoGadget) {
       var descricaoDoGadget = DADOS.gadgetPool[operador.side].filter(function (gadget) {
         return normalizar(gadget.name) === normalizar(nomeDoGadget);
@@ -572,27 +572,27 @@
     html += "</ul></div>";
 
     /* Armas */
-    html += '<div class="pane full"><h3>Armas (' + (todasAsArmas.length + 1) + ")</h3>";
+    html += '<div class="pane full"><h3>Weapons (' + (todasAsArmas.length + 1) + ")</h3>";
     if (!armas.primary.length && !armas.secondary.length) {
-      html += '<p class="muted">Nenhuma arma de fogo registrada para este operador.</p>';
+      html += '<p class="muted">No firearms recorded for this operator.</p>';
     } else {
       if (armas.primary.length) {
-        html += '<p class="small muted" style="margin-bottom:8px">Arma principal</p><div class="weapon-rows">';
+        html += '<p class="small muted" style="margin-bottom:8px">Primary weapon</p><div class="weapon-rows">';
         armas.primary.forEach(function (arma) { html += linhaDaArma(arma, true); });
         html += "</div>";
       }
       if (armas.secondary.length) {
-        html += '<p class="small muted" style="margin:16px 0 8px">Arma secundaria</p><div class="weapon-rows">';
+        html += '<p class="small muted" style="margin:16px 0 8px">Secondary weapon</p><div class="weapon-rows">';
         armas.secondary.forEach(function (arma) { html += linhaDaArma(arma, false); });
         html += "</div>";
       }
-      html += aviso("Os percentuais abaixo sao <b>estimativas da comunidade</b>. A Ubisoft nao publica " +
-        "percentual de uso de pecas. Clique na arma para ver o efeito de cada peca e quais operadores tambem a usam.", "info");
+      html += aviso("The percentages below are <b>community estimates</b>. Ubisoft does not publish " +
+        "attachment usage. Click a weapon to see the effect of each attachment and which operators also use it.", "info");
     }
     html += "</div>";
 
     /* Melhor uso */
-    html += '<div class="pane full"><h3>Melhor uso</h3><p class="lead-big">' + escapar(operador.best) + "</p></div>";
+    html += '<div class="pane full"><h3>Best use</h3><p class="lead-big">' + escapar(operador.best) + "</p></div>";
     html += "</div>";
 
     /* Botões de operador anterior e próximo */
@@ -603,7 +603,7 @@
     html += '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">' +
       (anterior ? '<a class="btn" href="#/agente/' + codificarParaLink(anterior.id) + '">&larr; ' + escapar(anterior.name) + "</a>" : "") +
       (proximo ? '<a class="btn" href="#/agente/' + codificarParaLink(proximo.id) + '">' + escapar(proximo.name) + " &rarr;</a>" : "") +
-      '<a class="btn btn-primary" href="#/agentes">Todos os operadores</a></div>';
+      '<a class="btn btn-primary" href="#/agentes">All operators</a></div>';
 
     return html;
   }
@@ -611,29 +611,29 @@
   /* Uma arma dentro da página de um Operador, com as barras de peça. */
   function linhaDaArma(arma, ehPrimaria) {
     var temMeta = !!arma.meta;
-    var rotulo = ehPrimaria ? "arma principal" : "arma secundaria";
+    var rotulo = ehPrimaria ? "primary weapon" : "secondary weapon";
 
     return '<div class="wrow" data-wrow>' +
       '<button class="wrow-head" data-wtoggle>' +
         '<span class="arrow">&#9656;</span>' +
         '<span class="wname">' + escapar(arma.name) + "</span>" +
         '<span class="wtype">' + escapar(arma.type) + "</span>" +
-        '<span class="empurra">' + (temMeta ? "meta de pecas" : "sem dados de meta") + "</span>" +
+        '<span class="empurra">' + (temMeta ? "attachment meta" : "no meta data") + "</span>" +
       "</button>" +
       '<div class="wrow-body">' +
         '<div class="wrow-stats">' +
-          "<span><b>Dano</b> " + escapar(arma.damage) + "</span>" +
+          "<span><b>Damage</b> " + escapar(arma.damage) + "</span>" +
           "<span><b>RPM</b> " + escapar(arma.rpm) + "</span>" +
-          "<span><b>Carregador</b> " + escapar(arma.magazine) + "</span>" +
+          "<span><b>Magazine</b> " + escapar(arma.magazine) + "</span>" +
           "<span><b>Slots</b> " + arma.slots.length + "</span>" +
-          "<span><b>Tipo</b> " + rotulo + "</span>" +
+          "<span><b>Type</b> " + rotulo + "</span>" +
         "</div>" +
         (arma.note ? '<p class="small muted">' + escapar(arma.note) + "</p>" : "") +
         (temMeta ? barrasDaMeta(arma) :
-          '<p class="small muted" style="margin:8px 0 0">Nao ha dados de meta de pecas para esta arma. ' +
-          "Consulte a <a class='src-link' href='" + escapar(CONFIG.sources.attachments) + "' target='_blank' rel='noopener'>wiki de attachments</a> para ver o que cada slot aceita.</p>") +
+          '<p class="small muted" style="margin:8px 0 0">No attachment meta data for this weapon. ' +
+          "Check the <a class='src-link' href='" + escapar(CONFIG.sources.attachments) + "' target='_blank' rel='noopener'>attachments wiki</a> to see what each slot accepts.</p>") +
         '<p class="small" style="margin:12px 0 0"><a class="src-link" href="#/arma/' +
-          codificarParaLink(arma.name) + '">Abrir pagina completa da arma</a></p>' +
+          codificarParaLink(arma.name) + '">Open full weapon page</a></p>' +
       "</div></div>";
   }
 
@@ -654,7 +654,7 @@
       html += "</div>";
     });
 
-    if (!html) return '<p class="small muted">Esta arma nao tem slots de peca com dados de meta.</p>';
+    if (!html) return '<p class="small muted">This weapon has no attachment slots with meta data.</p>';
     return html;
   }
 
@@ -687,38 +687,38 @@
     var temFiltro = filtros.type || filtros.q || filtros.only;
 
     var html = "";
-    html += cabecalhoDeSecao("Armas", "Catalogo de armas",
-      "Stats das armas, slots de peca e o percentual estimado das pecas mais usadas pelos jogadores.");
-    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Armas" }]);
+    html += cabecalhoDeSecao("Weapons", "Weapons catalog",
+      "Weapon stats, attachment slots and the estimated usage of the most popular attachments.");
+    html += migalhas([{ texto: "Home", link: "#/" }, { texto: "Weapons" }]);
 
     html += '<div class="toolbar">' +
-      '<span class="filtro-rotulo">Filtros</span>' +
-      '<select id="w-type" aria-label="Tipo"><option value="">Todos os tipos</option>' + opcoesDeTipo + "</select>" +
+      '<span class="filtro-rotulo">Filters</span>' +
+      '<select id="w-type" aria-label="Type"><option value="">All types</option>' + opcoesDeTipo + "</select>" +
       '<div class="divider"></div>' +
-      '<input class="filtro-campo" id="w-q" type="search" placeholder="Buscar arma..." value="' +
-        escapar(filtros.q || "") + '" aria-label="Buscar arma">' +
-      '<span class="filtro-contagem"><b>' + lista.length + "</b> de " + DADOS.weapons.length + "</span>" +
-      (temFiltro ? '<a class="btn" href="#/armas">Limpar</a>' : "") +
+      '<input class="filtro-campo" id="w-q" type="search" placeholder="Search weapons..." value="' +
+        escapar(filtros.q || "") + '" aria-label="Search weapons">' +
+      '<span class="filtro-contagem"><b>' + lista.length + "</b> of " + DADOS.weapons.length + "</span>" +
+      (temFiltro ? '<a class="btn" href="#/armas">Clear</a>' : "") +
     "</div>";
 
-    html += aviso("<b>Percentuais de pecas sao estimativas.</b> Nenhuma fonte publica mede o uso de pecas em R6. " +
-      "Os numeros vem do consenso entre guias, Reddit e jogadores profissionais, com confianca indicada por item. " +
-      "Os dados de dano das armas vem das notas oficiais da Ubisoft.", "info");
+    html += aviso("<b>Attachment percentages are estimates.</b> No source publicly measures attachment usage in R6. " +
+      "The numbers come from consensus among guides, Reddit and pro players, with confidence shown per item. " +
+      "Weapon damage data comes from Ubisoft's official notes.", "info");
 
     html += '<div class="grid-weapons">' + lista.map(cartaoDaArma).join("") + "</div>";
 
     /* Meta global, um painel por slot */
-    html += cabecalhoDeSecao("Referencia", "Meta global de pecas", "Distribuicao estimada de uso em todas as armas do jogo.");
+    html += cabecalhoDeSecao("Reference", "Global attachment meta", "Estimated usage distribution across all weapons in the game.");
     html += '<div class="panes">' +
-      painelDaMetaGlobal("cano", "Cano / Boca") +
+      painelDaMetaGlobal("cano", "Barrel / Muzzle") +
       painelDaMetaGlobal("grip", "Grip") +
-      painelDaMetaGlobal("mira", "Mira / Luneta") +
-      painelDaMetaGlobal("under", "Sousbarrel") +
+      painelDaMetaGlobal("mira", "Sight / Scope") +
+      painelDaMetaGlobal("under", "Under-barrel") +
     "</div>";
 
     /* Tabela com o efeito de cada peca */
-    html += cabecalhoDeSecao("Referencia", "Efeito de cada peca", "Valores medidos e documentados pela wiki de attachments.");
-    html += '<div class="tbl-scroll"><table><thead><tr><th>Peca</th><th>Slot</th><th>Efeito</th><th>Confianca do uso</th></tr></thead><tbody>';
+    html += cabecalhoDeSecao("Reference", "Effect of each attachment", "Values measured and documented by the attachments wiki.");
+    html += '<div class="tbl-scroll"><table><thead><tr><th>Attachment</th><th>Slot</th><th>Effect</th><th>Usage confidence</th></tr></thead><tbody>';
     Object.keys(DADOS.attachmentEffects).forEach(function (nomeDaPeca) {
       var peca = DADOS.attachmentEffects[nomeDaPeca];
       html += "<tr><td><b>" + escapar(nomeDaPeca) + "</b></td><td>" + escapar(nomeDoSlot(peca.slot)) +
@@ -752,15 +752,15 @@
   function paginaArma(nome) {
     var arma = acharArma(nome);
     if (!arma) {
-      return '<div class="empty-state"><b>Arma nao encontrada</b><a href="#/armas">Voltar ao catalogo</a></div>';
+      return '<div class="empty-state"><b>Weapon not found</b><a href="#/armas">Back to the catalog</a></div>';
     }
 
     var operadoresQueUsam = DADOS.weaponOperators(arma.name);
     var html = "";
 
     html += migalhas([
-      { texto: "Inicio", link: "#/" },
-      { texto: "Armas", link: "#/armas" },
+      { texto: "Home", link: "#/" },
+      { texto: "Weapons", link: "#/armas" },
       { texto: arma.name }
     ]);
 
@@ -770,24 +770,24 @@
         '<span class="eyebrow">' + escapar(arma.type) + "</span>" +
         "<h1>" + escapar(arma.name) + "</h1>" +
         '<div class="badges">' +
-          '<span class="badge">dano <b>' + escapar(arma.damage) + "</b></span>" +
+          '<span class="badge">damage <b>' + escapar(arma.damage) + "</b></span>" +
           '<span class="badge">' + escapar(arma.rpm) + " <b>rpm</b></span>" +
-          '<span class="badge">carregador <b>' + escapar(arma.magazine) + "</b></span>" +
+          '<span class="badge">magazine <b>' + escapar(arma.magazine) + "</b></span>" +
           '<span class="badge">slots <b>' + arma.slots.length + "</b></span>" +
-          '<span class="badge">' + operadoresQueUsam.length + " <b>operadores</b></span>" +
+          '<span class="badge">' + operadoresQueUsam.length + " <b>operators</b></span>" +
         "</div>" +
         (arma.note ? '<p class="muted" style="max-width:70ch">' + escapar(arma.note) + "</p>" : "") +
       "</div></section>";
 
     html += '<div class="panes">';
 
-    html += '<div class="pane"><h3>Meta de pecas por slot</h3>' +
-      (arma.meta ? barrasDaMeta(arma) : '<p class="muted">Nao ha dados de meta de pecas medidos ou consenso para esta arma. ' +
-        "Verifique a wiki para os slots e efeitos disponiveis.</p>") + "</div>";
+    html += '<div class="pane"><h3>Attachment meta per slot</h3>' +
+      (arma.meta ? barrasDaMeta(arma) : '<p class="muted">No measured attachment meta or consensus data for this weapon. ' +
+        "Check the wiki for available slots and effects.</p>") + "</div>";
 
-    html += '<div class="pane"><h3>Slots disponiveis</h3><ul class="sec-list">';
+    html += '<div class="pane"><h3>Available slots</h3><ul class="sec-list">';
     if (!arma.slots.length) {
-      html += '<li><span class="gadget-icone">-</span><div><b>Sem slots</b><small>Esta arma nao aceita pecas.</small></div></li>';
+      html += '<li><span class="gadget-icone">-</span><div><b>No slots</b><small>This weapon does not accept attachments.</small></div></li>';
     }
     arma.slots.forEach(function (slot) {
       html += "<li><span class='gadget-icone'>" + escapar(slot.charAt(0).toUpperCase()) + "</span><div><b>" +
@@ -795,9 +795,9 @@
     });
     html += "</ul></div>";
 
-    html += '<div class="pane full"><h3>Operadores que usam</h3>';
+    html += '<div class="pane full"><h3>Operators that use it</h3>';
     if (!operadoresQueUsam.length) {
-      html += '<p class="muted">Nenhum operador mapeado.</p>';
+      html += '<p class="muted">No operators mapped.</p>';
     } else {
       html += '<div class="grid-ops">' + operadoresQueUsam.map(cartaoDoOperador).join("") + "</div>";
     }
@@ -813,7 +813,7 @@
 
   /* A lista de notícias. Com "resumido = true", corta o texto em 2 frases. */
   function listaDeNoticias(itens, resumido) {
-    if (!itens.length) return '<div class="empty-state"><b>Nada por aqui</b></div>';
+    if (!itens.length) return '<div class="empty-state"><b>Nothing here</b></div>';
 
     return '<div class="news-list">' + itens.map(function (noticia) {
       var partesDaData = String(noticia.date).split("-");
@@ -831,7 +831,7 @@
               ? '<span class="pill ' + escapar(noticia.status) + '">' + escapar(nomeDoStatus(noticia.status)) + "</span>"
               : "") +
             (noticia.sourceUrl
-              ? '<a class="src-link" href="' + escapar(noticia.sourceUrl) + '" target="_blank" rel="noopener">fonte oficial</a>'
+              ? '<a class="src-link" href="' + escapar(noticia.sourceUrl) + '" target="_blank" rel="noopener">official source</a>'
               : "") +
           "</div>" +
         "</div></article>";
@@ -856,28 +856,28 @@
     }
 
     var html = "";
-    html += cabecalhoDeSecao("Noticias", "Noticias e balanceamentos",
-      "Patch notes oficiais da Ubisoft, anuncios de temporada, eventos in-game e resultados de esports.");
-    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Noticias" }]);
+    html += cabecalhoDeSecao("News", "News and balance",
+      "Official Ubisoft patch notes, season announcements, in-game events and esports results.");
+    html += migalhas([{ texto: "Home", link: "#/" }, { texto: "News" }]);
 
     html += '<div class="tabs">' +
-      '<button class="tab' + (aba === "noticias" ? " on" : "") + '" data-tab="noticias">Noticias</button>' +
-      '<button class="tab' + (aba === "balanceamentos" ? " on" : "") + '" data-tab="balanceamentos">Balanceamentos</button>' +
+      '<button class="tab' + (aba === "noticias" ? " on" : "") + '" data-tab="noticias">News</button>' +
+      '<button class="tab' + (aba === "balanceamentos" ? " on" : "") + '" data-tab="balanceamentos">Balance</button>' +
     "</div>";
 
     if (aba === "noticias") {
-      html += '<div class="toolbar"><span class="filtro-rotulo">Categorias</span>' +
-        '<a class="chip' + (!filtros.cat ? " on" : "") + '" href="#/noticias?tab=noticias">Todas</a>' +
+      html += '<div class="toolbar"><span class="filtro-rotulo">Categories</span>' +
+        '<a class="chip' + (!filtros.cat ? " on" : "") + '" href="#/noticias?tab=noticias">All</a>' +
         categorias.map(function (categoria) {
           return '<a class="chip' + (filtros.cat === categoria ? " on" : "") +
             '" href="#/noticias?tab=noticias&cat=' + encodeURIComponent(categoria) + '">' +
             escapar(nomeDaCategoria(categoria)) + "</a>";
         }).join("") +
-        '<span class="filtro-contagem"><b>' + itens.length + "</b> itens</span></div>";
+        '<span class="filtro-contagem"><b>' + itens.length + "</b> items</span></div>";
 
       html += listaDeNoticias(itens);
-      html += aviso("Conteudo resumido de fontes oficiais da Ubisoft e de sites de esports. " +
-        "Clique em &ldquo;fonte oficial&rdquo; para o anuncio original.", "info");
+      html += aviso("Content summarized from official Ubisoft sources and esports sites. " +
+        "Click &ldquo;official source&rdquo; for the original announcement.", "info");
     } else {
       html += listaDePatches();
     }
@@ -888,14 +888,14 @@
   /* A aba de balanceamentos: todas as patch notes, uma dobra dentro da outra. */
   function listaDePatches() {
     var patches = DADOS.patchnotes;
-    var html = aviso("<b>Fonte:</b> notas de patch oficiais da Ubisoft. " +
-      "Expandir um patch mostra destaques, novidades, tabela de balanceamento e correcoes.", "info");
+    var html = aviso("<b>Source:</b> official Ubisoft patch notes. " +
+      "Expanding a patch shows highlights, new content, balance table and fixes.", "info");
 
     html += '<div class="toolbar">' +
-      '<span class="filtro-rotulo">Legenda</span>' +
-      '<span class="pill buff">Buff</span><span class="pill nerf">Nerf</span><span class="pill mixed">Misto</span>' +
-      '<span class="filtro-contagem"><b>' + patches.patches.length + "</b> patches mapeados</span>" +
-      '<button class="btn" id="expand-all">Expandir tudo</button></div>';
+      '<span class="filtro-rotulo">Legend</span>' +
+      '<span class="pill buff">Buff</span><span class="pill nerf">Nerf</span><span class="pill mixed">Mixed</span>' +
+      '<span class="filtro-contagem"><b>' + patches.patches.length + "</b> patches mapped</span>" +
+      '<button class="btn" id="expand-all">Expand all</button></div>';
 
     html += patches.patches.map(function (patch) {
       return caixaDoPatch(patch);
@@ -913,24 +913,24 @@
     var dentro = "";
 
     if (destaques.length) {
-      dentro += "<h4>Destaques</h4><ul>" +
+      dentro += "<h4>Highlights</h4><ul>" +
         destaques.map(function (linha) { return "<li>" + escapar(linha) + "</li>"; }).join("") + "</ul>";
     }
 
     if ((patch.newOperators || []).length) {
-      dentro += "<h4>Operadores novos</h4><ul>" +
+      dentro += "<h4>New operators</h4><ul>" +
         patch.newOperators.map(function (nome) { return "<li><b>" + escapar(nome) + "</b></li>"; }).join("") + "</ul>";
     }
 
     if ((patch.newMaps || []).length) {
-      dentro += "<h4>Mapas</h4><ul>" +
+      dentro += "<h4>Maps</h4><ul>" +
         patch.newMaps.map(function (nome) { return "<li>" + escapar(nome) + "</li>"; }).join("") + "</ul>";
     }
 
     if (mudancas.length) {
-      dentro += "<h4>Mudancas de balanceamento (" + mudancas.length + ")</h4>" +
+      dentro += "<h4>Balance changes (" + mudancas.length + ")</h4>" +
         '<div class="tbl-scroll"><table><thead><tr>' +
-        "<th>Alvo</th><th>Gadget / arma</th><th>Mudanca</th><th>Direcao</th></tr></thead><tbody>" +
+        "<th>Target</th><th>Gadget / weapon</th><th>Change</th><th>Direction</th></tr></thead><tbody>" +
         mudancas.map(function (mudanca) {
           return "<tr><td><b>" + escapar(mudanca.operator || mudanca.target || "-") + "</b></td><td>" +
             escapar(mudanca.gadget || "-") + "</td><td>" + escapar(mudanca.change) + "</td><td>" +
@@ -938,18 +938,18 @@
         }).join("") +
         "</tbody></table></div>";
     } else {
-      dentro += '<p class="small muted" style="margin:10px 0 0">Esta nota nao trouxe mudancas de balanceamento de operador, gadget ou arma.</p>';
+      dentro += '<p class="small muted" style="margin:10px 0 0">This note brought no balance changes for operator, gadget or weapon.</p>';
     }
 
     if (totalDeCorrecoes) {
-      dentro += "<h4>Correcoes (" + totalDeCorrecoes + ")</h4><details><summary>Ver correcoes</summary><ul>" +
+      dentro += "<h4>Fixes (" + totalDeCorrecoes + ")</h4><details><summary>View fixes</summary><ul>" +
         (correcoes.gameplay || []).map(function (linha) { return "<li>" + escapar(linha) + "</li>"; }).join("") +
         (correcoes.ui || []).map(function (linha) { return '<li class="muted">' + escapar(linha) + "</li>"; }).join("") +
         "</ul></details>";
     }
 
     dentro += '<p class="small" style="margin-top:14px"><a class="src-link" href="' + escapar(patch.sourceUrl) +
-      '" target="_blank" rel="noopener">patch notes oficiais</a></p>';
+      '" target="_blank" rel="noopener">official patch notes</a></p>';
 
     return '<div class="patch" data-patch="' + escapar(patch.version) + '">' +
       '<button class="patch-head" data-ptoggle>' +
@@ -958,7 +958,7 @@
           " &middot; " + escapar(formatarData(patch.date)) + "</span>" +
         '<div class="patch-title">' + escapar(patch.headline || "") + "</div></span>" +
         '<span class="empurra"></span>' +
-        '<span class="patch-seen">' + mudancas.length + " mudancas</span>" +
+        '<span class="patch-seen">' + mudancas.length + " changes</span>" +
         '<span class="arrow">&#9656;</span>' +
       "</button>" +
       '<div class="patch-body">' + dentro + "</div>" +
@@ -1004,12 +1004,12 @@
   /* A etiqueta que mostra de onde veio o ranking. */
   function etiquetaDaOrigem() {
     if (!estadoDaApi.ligada) {
-      return '<span class="badge">fonte: <b>snapshot local</b> (' + escapar(formatarData(CONFIG.snapshot)) + ")</span>";
+      return '<span class="badge">source: <b>local snapshot</b> (' + escapar(formatarData(CONFIG.snapshot)) + ")</span>";
     }
-    if (estadoDaApi.carregada) return '<span class="badge gold">fonte: <b>API ao vivo</b></span>';
-    if (estadoDaApi.carregando) return '<span class="badge">fonte: <b>consultando API...</b></span>';
-    return '<span class="badge">fonte: <b>snapshot local</b> (API indisponivel: ' +
-      escapar(estadoDaApi.erro || "sem conexao") + ")</span>";
+    if (estadoDaApi.carregada) return '<span class="badge gold">source: <b>live API</b></span>';
+    if (estadoDaApi.carregando) return '<span class="badge">source: <b>querying API...</b></span>';
+    return '<span class="badge">source: <b>local snapshot</b> (API unavailable: ' +
+      escapar(estadoDaApi.erro || "no connection") + ")</span>";
   }
 
   function paginaRankings(filtros) {
@@ -1017,23 +1017,23 @@
     var ranking = DADOS.rankings;
     var html = "";
 
-    html += cabecalhoDeSecao("Rankings", "Times e jogadores", "Ranking oficial, com fontes e data de referencia.");
-    html += migalhas([{ texto: "Inicio", link: "#/" }, { texto: "Rankings" }]);
+    html += cabecalhoDeSecao("Rankings", "Teams and players", "Official ranking, with sources and reference date.");
+    html += migalhas([{ texto: "Home", link: "#/" }, { texto: "Rankings" }]);
 
-    html += '<div class="toolbar"><span class="filtro-rotulo">Origem dos dados</span>' + etiquetaDaOrigem() +
+    html += '<div class="toolbar"><span class="filtro-rotulo">Data source</span>' + etiquetaDaOrigem() +
       '<span class="filtro-contagem">snapshot ' + escapar(formatarData(ranking.snapshot)) + "</span></div>";
 
     html += '<div class="tabs">' +
-      '<button class="tab' + (aba === "times" ? " on" : "") + '" data-tab="times">Times</button>' +
-      '<button class="tab' + (aba === "solo" ? " on" : "") + '" data-tab="solo">Solo / jogadores</button>' +
+      '<button class="tab' + (aba === "times" ? " on" : "") + '" data-tab="times">Teams</button>' +
+      '<button class="tab' + (aba === "solo" ? " on" : "") + '" data-tab="solo">Solo / players</button>' +
     "</div>";
 
     if (aba === "times") {
-      html += aviso("<b>Importante:</b> " + escapar(ranking.disclaimer.teams), "info");
+      html += aviso("<b>Important:</b> " + escapar(ranking.disclaimer.teams), "info");
 
       /* Tabela dos times principais */
       html += '<div class="tbl-scroll"><table><thead><tr>' +
-        "<th>#</th><th>Time</th><th>Regiao</th><th>Elenco</th><th>Titulos</th><th>Rolling 12m</th><th>Pts SI</th>" +
+        "<th>#</th><th>Team</th><th>Region</th><th>Roster</th><th>Titles</th><th>Rolling 12m</th><th>SI pts</th>" +
         "</tr></thead><tbody>";
       ranking.teams.forEach(function (time) {
         html += '<tr class="rank-medals rank-' + time.position + '"><td class="num"><b>' + time.position + "</b></td>" +
@@ -1053,10 +1053,10 @@
       html += "</tbody></table></div>";
 
       /* Tabela dos outros times */
-      html += cabecalhoDeSecao("Referencias", "Outros times no ranking",
-        "Posicoes no ranking rolling de 12 meses e no ranking de pontos do Six Invitational.");
+      html += cabecalhoDeSecao("References", "Other teams in the ranking",
+        "Positions in the 12-month rolling ranking and the Six Invitational points ranking.");
       html += '<div class="tbl-scroll"><table><thead><tr>' +
-        "<th>Time</th><th>Rolling 12m</th><th>Pos. pontos SI</th><th>Obs.</th></tr></thead><tbody>";
+        "<th>Team</th><th>Rolling 12m</th><th>SI points pos.</th><th>Notes</th></tr></thead><tbody>";
       ranking.teamsMore.forEach(function (time) {
         html += "<tr><td><b>" + escapar(time.name) + "</b></td><td>#" + escapar(time.rollingPosition) +
           "</td><td>#" + escapar(time.siPosition) + "</td>" +
@@ -1065,33 +1065,33 @@
       html += "</tbody></table></div>";
 
       /* Contexto dos próximos eventos */
-      html += cabecalhoDeSecao("Circuito", "Proximos eventos e contexto");
+      html += cabecalhoDeSecao("Circuit", "Upcoming events and context");
       html += '<div class="home-grid">' +
-        '<div class="pane"><h3>Proximo Major</h3><p class="lead-big">' + escapar(ranking.circuit.majorNext.name) + "</p>" +
+        '<div class="pane"><h3>Next Major</h3><p class="lead-big">' + escapar(ranking.circuit.majorNext.name) + "</p>" +
           "<p>" + escapar(ranking.circuit.majorNext.date) + " &middot; " + escapar(ranking.circuit.majorNext.place) + " &middot; " +
-          escapar(ranking.circuit.majorNext.teams) + " times</p>" +
+          escapar(ranking.circuit.majorNext.teams) + " teams</p>" +
           '<p class="small muted">' + escapar(ranking.circuit.majorNext.note) + "</p></div>" +
-        '<div class="pane"><h3>Proximo Six Invitational</h3><p class="lead-big">' + escapar(ranking.circuit.siNext.name) + "</p>" +
+        '<div class="pane"><h3>Next Six Invitational</h3><p class="lead-big">' + escapar(ranking.circuit.siNext.name) + "</p>" +
           "<p>" + escapar(ranking.circuit.siNext.date) + " &middot; " + escapar(ranking.circuit.siNext.place) + "</p>" +
-          '<p class="small muted">Qualificados ate agora: <b>' + escapar(ranking.circuit.qualifiedSoFar.join(", ")) + "</b>. " +
+          '<p class="small muted">Qualified so far: <b>' + escapar(ranking.circuit.qualifiedSoFar.join(", ")) + "</b>. " +
           escapar(ranking.circuit.siNext.note) + "</p></div>" +
         '<div class="pane"><h3>Ranked 3.0</h3><p class="lead-big">' + escapar(ranking.circuit.ranked.name) + "</p>" +
-          "<p>Desde " + escapar(formatarData(ranking.circuit.ranked.since)) + " (" + escapar(ranking.circuit.ranked.season) + ")</p>" +
+          "<p>Since " + escapar(formatarData(ranking.circuit.ranked.since)) + " (" + escapar(ranking.circuit.ranked.season) + ")</p>" +
           '<p class="small muted">' + escapar(ranking.circuit.ranked.note) + "</p></div>" +
       "</div>";
     } else {
-      html += aviso("<b>Aviso honesto:</b> " + escapar(ranking.disclaimer.solo), "info");
+      html += aviso("<b>Honest notice:</b> " + escapar(ranking.disclaimer.solo), "info");
 
       html += '<div class="expand-note" style="margin-bottom:18px">' +
-        "Se voce configurar <code class='mono'>rankingApiUrl</code> em " +
-        "<code class='mono'>assets/js/config.js</code>, esta aba tenta buscar um endpoint JSON ao vivo " +
-        "(formato <code class='mono'>{ teams: [...], solo: [...] }</code>) e sobe com os dados fresh; " +
-        "se o endpoint falhar, o snapshot local abaixo e mantido. Status atual: " + etiquetaDaOrigem() + ". " +
-        "Sem API configurada, o site mostra nomes e titulos reais verificados, sem inventar MMR." +
+        "If you set <code class='mono'>rankingApiUrl</code> in " +
+        "<code class='mono'>assets/js/config.js</code>, this tab tries to fetch a live JSON endpoint " +
+        "(format <code class='mono'>{ teams: [...], solo: [...] }</code>) and comes up with fresh data; " +
+        "if the endpoint fails, the local snapshot below is kept. Current status: " + etiquetaDaOrigem() + ". " +
+        "With no API configured, the site shows verified real names and titles, without inventing MMR." +
       "</div>";
 
       html += '<div class="tbl-scroll"><table><thead><tr>' +
-        "<th>#</th><th>Jogador</th><th>Pais</th><th>Time</th><th>MMR / RP</th><th>Notas</th>" +
+        "<th>#</th><th>Player</th><th>Country</th><th>Team</th><th>MMR / RP</th><th>Notes</th>" +
         "</tr></thead><tbody>";
       ranking.solo.forEach(function (jogador) {
         html += '<tr class="rank-medals rank-' + jogador.position + '"><td class="num"><b>' + escapar(jogador.position) + "</b></td>" +
@@ -1099,14 +1099,14 @@
           '<div><div class="tn">' + escapar(jogador.nickname) + '</div><div class="tr">' + escapar(jogador.realName) + "</div></div></div></td>" +
           "<td>" + escapar(jogador.country) + "</td>" +
           "<td>" + escapar(jogador.team) + "</td>" +
-          '<td><span class="mmr-na">sem MMR publico</span></td>' +
+          '<td><span class="mmr-na">no public MMR</span></td>' +
           '<td class="small">' + escapar(jogador.note) + "</td></tr>";
       });
       html += "</tbody></table></div>";
     }
 
-    html += '<p class="small muted" style="margin-top:18px">Data de referencia do ranking: <b>' +
-      escapar(formatarData(ranking.snapshot)) + "</b>. Fontes: " +
+    html += '<p class="small muted" style="margin-top:18px">Ranking reference date: <b>' +
+      escapar(formatarData(ranking.snapshot)) + "</b>. Sources: " +
       '<a class="src-link" href="' + escapar(CONFIG.sources.standings) + '" target="_blank" rel="noopener">Ubisoft global standings</a> e ' +
       '<a class="src-link" href="' + escapar(CONFIG.sources.sixstats) + '" target="_blank" rel="noopener">SixStats</a>.</p>';
 
@@ -1148,11 +1148,11 @@
     } else if (secao === "rankings") {
       html = paginaRankings(filtros);
     } else {
-      html = '<div class="empty-state"><b>Pagina nao encontrada</b><a href="#/">Voltar ao inicio</a></div>';
+      html = '<div class="empty-state"><b>Page not found</b><a href="#/">Back to home</a></div>';
     }
 
     AREA_PRINCIPAL.innerHTML = html;
-    document.title = tituloDaPagina(secao) + " | R6 HUB";
+    document.title = "R6-HUB";
 
     /* Marca no menu qual aba está aberta */
     document.querySelectorAll("#nav a").forEach(function (link) {
@@ -1184,23 +1184,6 @@
     if (secao === "rankings") carregarRankingDaApi();
   }
 
-  function tituloDaPagina(secao) {
-    return {
-      "": "Hub de Rainbow Six Siege",
-      "agentes": "Agentes",
-      "agente": "Operador",
-      "armas": "Armas",
-      "arma": "Arma",
-      "noticias": "Noticias e Balanceamento",
-      "rankings": "Rankings"
-    }[secao] || "R6 HUB";
-  }
-
-  /* =================================================================
-     PARTE 6 - LIGAR OS BOTÕES
-     =================================================================
-     Tudo aqui é ligado depois que o HTML é montado, porque o conteúdo
-     muda toda vez que o usuário troca de página.                          */
   function ligarBotoes() {
 
     /* Abre e fecha a linha de uma arma */
@@ -1208,7 +1191,7 @@
       botao.addEventListener("click", function () {
         botao.parentNode.classList.toggle("open");
         botao.querySelector(".empurra").textContent =
-          botao.parentNode.classList.contains("open") ? "fechar" : "meta de pecas";
+          botao.parentNode.classList.contains("open") ? "close" : "attachment meta";
       });
     });
 
@@ -1227,7 +1210,7 @@
         var jaAbertos = AREA_PRINCIPAL.querySelectorAll(".patch.open").length;
         var querAbrir = jaAbertos < todosOsPatches.length / 2;
         todosOsPatches.forEach(function (patch) { patch.classList.toggle("open", querAbrir); });
-        botaoExpandir.textContent = querAbrir ? "Recolher tudo" : "Expandir tudo";
+        botaoExpandir.textContent = querAbrir ? "Collapse all" : "Expand all";
       });
     }
 
@@ -1305,7 +1288,7 @@
     var html = "";
 
     if (operadores.length) {
-      html += '<div class="busca-grupo"><div class="busca-titulo">Operadores</div>';
+      html += '<div class="busca-grupo"><div class="busca-titulo">Operators</div>';
       operadores.forEach(function (operador) {
         html += '<a class="busca-item" href="#/agente/' + codificarParaLink(operador.id) + '">' +
           '<span class="etiqueta-lado ' + (operador.side === "ATK" ? "atk" : "def") + '">' + siglaDoLado(operador.side) + "</span>" +
@@ -1315,18 +1298,18 @@
     }
 
     if (armas.length) {
-      html += '<div class="busca-grupo"><div class="busca-titulo">Armas</div>';
+      html += '<div class="busca-grupo"><div class="busca-titulo">Weapons</div>';
       armas.forEach(function (arma) {
         html += '<a class="busca-item" href="#/arma/' + codificarParaLink(arma.name) + '">' +
           '<span class="etiqueta-lado def">' + escapar(arma.type) + "</span>" +
           "<span><b>" + escapar(arma.name) + '</b><br><small>' + escapar(arma.damage) +
-          " dano &middot; " + escapar(arma.magazine) + "</small></span></a>";
+          " damage &middot; " + escapar(arma.magazine) + "</small></span></a>";
       });
       html += "</div>";
     }
 
     if (!html) {
-      html = '<div class="busca-vazia">Nada encontrado para &ldquo;' + escapar(termo) + "&rdquo;.</div>";
+      html = '<div class="busca-vazia">Nothing found for &ldquo;' + escapar(termo) + "&rdquo;.</div>";
     }
 
     caixa.innerHTML = html;
@@ -1343,12 +1326,12 @@
     if (listaDeFontes) {
       var fontes = CONFIG.sources;
       listaDeFontes.innerHTML = [
-        ["Operadores (Ubisoft)", fontes.operators],
-        ["Operadores (wiki)", fontes.wiki],
-        ["Patch notes oficiais", fontes.patchNotes],
-        ["Ranking profissional", fontes.standings],
-        ["Ranking rolling 12m", fontes.sixstats],
-        ["Pecas e efeitos", fontes.attachments]
+        ["Operators (Ubisoft)", fontes.operators],
+        ["Operators (wiki)", fontes.wiki],
+        ["Official patch notes", fontes.patchNotes],
+        ["Pro ranking", fontes.standings],
+        ["Rolling 12m ranking", fontes.sixstats],
+        ["Attachments and effects", fontes.attachments]
       ].map(function (fonte) {
         return '<li><a href="' + escapar(fonte[1]) + '" target="_blank" rel="noopener">' + escapar(fonte[0]) + "</a></li>";
       }).join("");

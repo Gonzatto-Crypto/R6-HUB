@@ -1,7 +1,7 @@
 /* R6 HUB - configuracao global */
 window.R6HUB_CONFIG = {
-  siteName: "R6 HUB",
-  tagline: "Hub de Rainbow Six Siege",
+  siteName: "R6-HUB",
+  tagline: "Rainbow Six Siege Hub",
   /* Snapshot de referencia dos dados */
   snapshot: "2026-09-28",
 

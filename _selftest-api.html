@@ -61,7 +61,7 @@ window.__liveJson = {
         else log("[ok] times vieram da API");
         if (t1.indexOf("DarkZero") !== -1) fail("snapshot local nao foi substituido");
         else log("[ok] snapshot local substituido");
-        if (!badge || badge.textContent.indexOf("API ao vivo") === -1) fail("badge nao indica API ao vivo");
+        if (!badge || badge.textContent.indexOf("live API") === -1) fail("badge does not indicate live API");
         var rows = document.querySelectorAll("#main table")[0].querySelectorAll("tbody tr");
         if (rows.length !== 2) fail("esperava 2 linhas da API, veio " + rows.length);
         else log("[ok] tabela de times com " + rows.length + " linhas");
@@ -83,7 +83,7 @@ window.__liveJson = {
         setTimeout(function () {
           var note = document.querySelector("#main .expand-note");
           if (!note) fail("modo bad: sem .expand-note na aba solo");
-          else if (note.textContent.indexOf("API indisponivel") === -1) fail("modo bad: aviso de API indisponivel ausente -> " + note.textContent.slice(0, 160));
+          else if (note.textContent.indexOf("API unavailable") === -1) fail("modo bad: API unavailable notice missing -> " + note.textContent.slice(0, 160));
           else log("[bad] aviso de fallback exibido");
           if (txt().indexOf("cyber") === -1) fail("modo bad: aba solo sem dados locais");
           else log("[bad] aba solo caiu no snapshot local (cyber presente)");
