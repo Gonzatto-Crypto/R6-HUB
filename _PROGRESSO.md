@@ -2,13 +2,20 @@
 
 > Arquivo de trabalho entre sessões. **NÃO faz parte do site.** Pode apagar quando quiser.
 
-## ESTADO: PRONTO, TESTADO E REFATORADO
+## ESTADO: PRONTO, TESTADO, PUBLICADO E COM ATUALIZAÇÃO AUTOMÁTICA
 
-O site está completo e a refatoração de legibilidade terminou. Não há pendência técnica.
+O site está completo, a refatoração de legibilidade terminou e agora ele também está
+publicado no **GitHub Pages**, com as patch notes se atualizando sozinhas todo dia.
+Não há pendência técnica.
 
 Commits (do mais recente para o mais antigo):
 
 ```
+21c9ef6  corrige a acentuacao nos textos da interface
+c0ce68a  automatiza a atualizacao de patch notes e o deploy no GitHub Pages
+8cdf85c  adiciona um desenho SVG para cada operador
+216a443  simplifica o CSS e padroniza os nomes das classes em portugues
+26ecd3a  atualiza a documentacao interna com o estado atual do projeto
 3cb1fee  atualiza os testes automaticos para os novos nomes de campo
 8f6d5e4  refatora: troca nomes curtos de campos e variaveis por nomes claros
 88cf3e3  docs: simplifica o README para linguagem do dia a dia
@@ -63,7 +70,8 @@ O esperado é `JS-ERROS(0)` e `FALHAS(0)` nas três. Se preferir ver na tela, é
 8. **APIs que falham por DNS** (não é bug do código): `api.ubisoft.com`, `r6.ubisoft.com`,
    `r6.tracker.gg`, `api.servicehub.ubisoft.com`.
 9. **`patchnotes.js` e `news.js` são gerados.** Para mudar, edite `data\patchnotes.json` ou
-   `data\news.json` e rode `tools\build-data.ps1`. Não edite o `.js` na mão.
+   `data\news.json` e rode `tools\build-data.ps1`. Não edite o `.js` na mão. As patch notes
+   novas entram sozinhas por `tools\update-patch-notes.ps1` (veja a seção 6).
 
 ---
 
@@ -85,6 +93,9 @@ O esperado é `JS-ERROS(0)` e `FALHAS(0)` nas três. Se preferir ver na tela, é
 3. **Código para gente não técnica:** nomes longos em português, comentários explicando o
    "porquê", sem abstrações espertas. Ao mudar código, rode os 3 testes da seção 1.
 4. **Commits simples e frequentes**, com mensagem curta e em português.
+5. **Publicação no GitHub Pages** com **atualização 100% automática** das patch notes (o robô
+   commita direto, sem revisão) e classificação **buff/nerf só por heurística, sem IA**
+   (quando em dúvida, "Misto").
 
 ---
 
@@ -118,3 +129,42 @@ Cuidados:
 - Logotipos de times e jogadores têm direitos de uso da Ubisoft — avisar antes de embutir
   logotipo de terceiros.
 - Nomear arquivos sem acento, em minúsculas e com hífen, para casar com a chave de lookup.
+
+---
+
+## 6. Publicação e atualização automática (novo)
+
+Dois workflows em `.github/workflows/`:
+
+| Arquivo | Quando roda | O que faz |
+| --- | --- | --- |
+| `pages.yml` | push na `main`, fim do workflow de patch notes, ou manual | publica `index.html` + `assets/` no GitHub Pages |
+| `update-patch-notes.yml` | 09:00 UTC todo dia, ou manual | baixa o feed, mescla patch notes novas, regera os `.js` e commita |
+
+Detalhes que importam:
+
+- **A publicação pelo GitHub Pages precisa ser ligada uma vez** em
+  **Settings → Pages → Source → GitHub Actions**. Sem isso o `pages.yml` falha — e o primeiro
+  push já rodou o workflow antes de estar ligado, então é preciso **Re-run** depois de ligar.
+- **O commit do robô usa o `GITHUB_TOKEN`**, e commit feito com esse token **não dispara outros
+  workflows** por push (regra do GitHub). Por isso o `pages.yml` escuta o evento `workflow_run`
+  (o fim do workflow de patch notes), em vez de confiar no push do bot.
+- O `pages.yml` publica **só** o `index.html` e a pasta `assets/` — os testes (`_selftest*.html`),
+  a pasta `tools/` e a pasta `data/` ficam de fora do site.
+
+### Como o `tools/update-patch-notes.ps1` funciona
+
+1. Baixa `news.min.json` do `danielwerg/r6news` (espelho do site oficial).
+2. Filtra só o que tem `categories` com `patch-notes` **e** título com "patch notes" — isso
+   descarta "Designer's Notes" e "Streamer Charm", que vêm com a mesma categoria.
+3. Compara com os `label`s já salvos e adiciona **apenas** as notas mais novas que a mais
+   recente registrada — nunca faz backfill de nota antiga.
+4. Grava o JSON **como texto**: insere as entradas novas logo após `"patches": [`, sem
+   reserializar o resto. Se não houver nada novo, nem toca no arquivo (não gera commit vazio).
+5. Atualiza `generatedAt` só quando há mudança.
+
+**Buff/nerf é heurístico, sem IA:** o script descobre se o número subiu ou desceu pelo verbo
+(`increased`, `reduced`, ...) e cruza com duas tabelas de palavras-chave (o que melhora vs. o
+que piora ao subir). Sem verbo ou sem palavra-chave, a mudança fica **sem** `direction`, e o
+site (`etiquetaDirecao`, em `app.js`) mostra **Misto**. Ao mexer nessas listas, teste com uma
+nota real como na seção 1.

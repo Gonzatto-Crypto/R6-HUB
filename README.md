@@ -44,6 +44,10 @@ assets/img/operators/LEIA-ME.md  de onde veio e a licença dos desenhos
 data/patchnotes.json          a fonte dos balanceamentos
 data/news.json                a fonte das notícias
 tools/build-data.ps1          script que regera os dois arquivos "gerado"
+tools/update-patch-notes.ps1  script que baixa e junta as patch notes novas
+
+.github/workflows/pages.yml               publica o site no GitHub Pages
+.github/workflows/update-patch-notes.yml  roda todo dia e atualiza as patch notes
 ```
 
 ## Mudar alguma informação
@@ -65,6 +69,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\build-data.ps1
 ```
 
 O script lê `data\patchnotes.json` e `data\news.json` e reescreve os dois arquivos `.js` correspondentes. Se algum JSON estiver com erro de escrita, o script avisa e não gera.
+
+## Publicar e atualizar automaticamente
+
+O site fica no ar pelo **GitHub Pages** e as patch notes se atualizam sozinhas.
+
+- **Publicar:** quem cuida disso é o workflow `pages.yml`. Ele manda para o ar só o `index.html` e a pasta `assets/` (os testes e a pasta `tools/` ficam de fora). Roda sempre que algo novo chega na branch `main`.
+- **Atualizar as patch notes:** o workflow `update-patch-notes.yml` roda todo dia. Ele baixa o feed oficial, junta **só as notas mais novas** que a última que já está salva, regera os arquivos `.js` e faz o commit. Se não houver nota nova, não faz nada.
+- Os dois também podem ser rodados na mão: no GitHub, aba **Actions**, escolha o workflow e clique em **Run workflow**.
+
+Na primeira vez é preciso ligar a publicação: **Settings → Pages → Source → GitHub Actions**.
+
+### Rodar a atualização de patch notes na mão
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\update-patch-notes.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\build-data.ps1
+```
+
+**Como o buff/nerf é decidido:** o script **não usa inteligência artificial**. Ele vê se o número subiu ou desceu (pelo verbo: *increased*, *reduced*, etc.), confere o que aquilo significa para o atributo (mais munição é bom; mais recuo é ruim) e marca **Buff** ou **Nerf**. Quando não dá para ter certeza, deixa em branco — e o site mostra **Misto**.
 
 ## Testar
 
