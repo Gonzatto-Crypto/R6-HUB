@@ -1,0 +1,52 @@
+name: Publicar site
+
+# Publica o site estatico no GitHub Pages.
+# Roda em: push na main, quando o workflow de patch notes termina com sucesso,
+# ou manualmente pela aba Actions.
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: ["Atualizar patch notes"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    # No gatilho workflow_run, so publica se a atualizacao deu certo.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Baixar o repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar apenas o que vai ao ar
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp -r assets _site/
+
+      - name: Configurar o Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empacotar o site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publicar
+        id: deploy
+        uses: actions/deploy-pages@v4

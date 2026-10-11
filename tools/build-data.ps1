@@ -16,12 +16,18 @@
 
 [CmdletBinding()]
 param(
-  [string]$DataDir = (Join-Path $PSScriptRoot '..\data'),
-  [string]$OutDir  = (Join-Path $PSScriptRoot '..\assets\js\data')
+  [string]$DataDir,
+  [string]$OutDir
 )
 
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# $PSScriptRoot pode vir vazio dependendo de como o script foi chamado.
+# Cai para a pasta atual (o script e rodado a partir da raiz do projeto).
+$raizProjeto = if ($PSScriptRoot) { Split-Path -Parent $PSScriptRoot } else { (Get-Location).Path }
+if (-not $DataDir) { $DataDir = Join-Path $raizProjeto 'data' }
+if (-not $OutDir)  { $OutDir  = Join-Path $raizProjeto 'assets\js\data' }
 
 $map = [ordered]@{
   'patchnotes.json' = 'patchnotes'
@@ -46,9 +52,12 @@ foreach ($file in $map.Keys) {
     throw "JSON invalido em ${file}: $($_.Exception.Message)"
   }
 
-  # Reindenta com 2 espacos e remove o BOM, se houver.
-  $obj = $raw | ConvertFrom-Json
-  $json = ($obj | ConvertTo-Json -Depth 20) -replace "`r`n", "`n"
+  # Embutimos o JSON exatamente como esta no arquivo fonte, sem
+  # reserializar. Isso e de proposito: o ConvertTo-Json muda de formato
+  # conforme a versao do PowerShell (indentacao e escape de apostrofo),
+  # o que faria o arquivo "mudar" a cada rodada mesmo sem dado novo.
+  # Copiando o texto cru, o resultado e sempre o mesmo.
+  $json = $raw.TrimEnd()
   $key  = $map[$file]
   $name = [System.IO.Path]::GetFileNameWithoutExtension($file)
   $out  = Join-Path $OutDir "$name.js"

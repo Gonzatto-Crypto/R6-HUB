@@ -1056,5 +1056,4 @@ window.R6HUB.patchnotes = {
       "sourceUrl": "https://www.ubisoft.com/en-gb/game/rainbow-six/siege/game-info/seasons/prepphase"
     }
   ]
-}
-;
+};

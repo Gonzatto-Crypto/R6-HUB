@@ -117,5 +117,4 @@ window.R6HUB.news = {
       "sourceUrl": "https://siege.gg/news/faze-clan-have-won-the-six-invitational-2026-after-two-infinite-overtime-maps"
     }
   ]
-}
-;
+};
