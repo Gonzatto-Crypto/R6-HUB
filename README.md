@@ -1,106 +1,106 @@
 # R6 HUB
 
-Site de comunidade sobre o jogo Rainbow Six Siege. Tem Operadores, armas, notícias, histórico de balanceamento e rankings.
+Community site about the game Rainbow Six Siege. It has Operators, weapons, news, balance history and rankings.
 
-Projeto não oficial, sem vínculo com a Ubisoft.
+Unofficial project, with no affiliation with Ubisoft.
 
-## Como abrir
+## How to open
 
-Dê dois cliques no arquivo `index.html`. É isso — não precisa instalar nada nem subir servidor.
+Double-click the file `index.html`. That's it — no need to install anything or run a server.
 
-Precisa de um navegador atual (Edge, Chrome, Firefox ou Safari). Funciona sem internet: o site abre offline.
+You need a current browser (Edge, Chrome, Firefox or Safari). It works without internet: the site opens offline.
 
-## O que tem no site
+## What's on the site
 
-| Página | O que mostra |
+| Page | What it shows |
 | --- | --- |
-| Início | Temporada atual, destaques, últimas notícias e os times no topo |
-| Agentes | Os 78 Operadores, com filtro por lado, função, CTU, vida, velocidade e ano |
-| Armas | As 116 armas, com dano, cadência, carregador e as peças mais usadas |
-| Notícias | Notícias do jogo com filtro por categoria |
-| Balanceamentos | As patch notes oficiais, com o que foi buffado ou nerfrado |
-| Rankings | Times profissionais e jogadores individuais mais titulados |
+| Home | Current season, highlights, latest news and the teams at the top |
+| Operators | The 78 Operators, with a filter by side, role, CTU, health, speed and year |
+| Weapons | The 116 weapons, with damage, rate of fire, magazine and the most used attachments |
+| News | Game news with a filter by category |
+| Balance | The official patch notes, with what was buffed or nerfed |
+| Rankings | Professional teams and the most decorated individual players |
 
-## Onde ficam as coisas
+## Where things are
 
 ```
-index.html                    a página do site
-README.md                     este arquivo
-_selftest.html                teste automático (veja "Testar" abaixo)
-_selftest-api.html            teste automático da parte de rankings
+index.html                    the site page
+README.md                     this file
+_selftest.html                automated test (see "Test" below)
+_selftest-api.html            automated test for the rankings part
 
-assets/css/styles.css         as cores e o visual
-assets/js/config.js           o que pode ser mudado sem mexer no código
-assets/js/app.js              o site em si: mostra as páginas e trata o clique
-assets/js/data/operators.js   a lista de Operadores
-assets/js/data/weapons.js     a lista de armas
-assets/js/data/rankings.js    a lista de times e jogadores
-assets/js/data/patchnotes.js  os balanceamentos  (gerado, não editar)
-assets/js/data/news.js        as notícias         (gerado, não editar)
+assets/css/styles.css         the colors and the visual
+assets/js/config.js           what can be changed without touching the code
+assets/js/app.js              the site itself: shows the pages and handles clicks
+assets/js/data/operators.js   the list of Operators
+assets/js/data/weapons.js     the list of weapons
+assets/js/data/rankings.js    the list of teams and players
+assets/js/data/patchnotes.js  the balance changes  (generated, do not edit)
+assets/js/data/news.js        the news             (generated, do not edit)
 
-assets/img/operators/         um desenho SVG por Operador
-assets/img/operators/LEIA-ME.md  de onde veio e a licença dos desenhos
+assets/img/operators/         one SVG drawing per Operator
+assets/img/operators/LEIA-ME.md  where the drawings came from and their license
 
-data/patchnotes.json          a fonte dos balanceamentos
-data/news.json                a fonte das notícias
-tools/build-data.ps1          script que regera os dois arquivos "gerado"
-tools/update-patch-notes.ps1  script que baixa e junta as patch notes novas
+data/patchnotes.json          the source of the balance changes
+data/news.json                the source of the news
+tools/build-data.ps1          script that regenerates the two "generated" files
+tools/update-patch-notes.ps1  script that downloads and merges the new patch notes
 
-.github/workflows/pages.yml               publica o site no GitHub Pages
-.github/workflows/update-patch-notes.yml  roda todo dia e atualiza as patch notes
+.github/workflows/pages.yml               publishes the site on GitHub Pages
+.github/workflows/update-patch-notes.yml  runs every day and updates the patch notes
 ```
 
-## Mudar alguma informação
+## Changing some information
 
-Quase tudo o que aparece na tela está em `assets\js\data\`. Abra o arquivo, ache a linha que quer mudar, edite e salve. Depois é só dar F5 no navegador.
+Almost everything that appears on screen is in `assets\js\data\`. Open the file, find the line you want to change, edit it and save. Then just press F5 in the browser.
 
-- Quer mudar cores ou textos fixos? Editar `assets\js\config.js`.
-- Quer mudar os links de origem (Ubisoft, wiki, etc.)? Editar `assets\js\config.js`.
-- Quer ver um ranking que vem de um servidor externo? Editar `rankingApiUrl` em `assets\js\config.js`. Se deixar vazio, o site usa a lista que está no arquivo.
+- Want to change colors or fixed texts? Edit `assets\js\config.js`.
+- Want to change the source links (Ubisoft, wiki, etc.)? Edit `assets\js\config.js`.
+- Want to see a ranking that comes from an external server? Edit `rankingApiUrl` in `assets\js\config.js`. If you leave it empty, the site uses the list in the file.
 
-**Atenção:** `patchnotes.js` e `news.js` são gerados. Para mudar balanceamentos ou notícias, edite os `.json` da pasta `data/` e rode o script abaixo.
+**Warning:** `patchnotes.js` and `news.js` are generated. To change balance changes or news, edit the `.json` files in the `data/` folder and run the script below.
 
-## Gerar os arquivos automáticos
+## Generating the automatic files
 
-Abra o PowerShell na pasta do projeto e rode:
+Open PowerShell in the project folder and run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\build-data.ps1
 ```
 
-O script lê `data\patchnotes.json` e `data\news.json` e reescreve os dois arquivos `.js` correspondentes. Se algum JSON estiver com erro de escrita, o script avisa e não gera.
+The script reads `data\patchnotes.json` and `data\news.json` and rewrites the two corresponding `.js` files. If any JSON has a writing error, the script warns you and does not generate.
 
-## Publicar e atualizar automaticamente
+## Publishing and updating automatically
 
-O site fica no ar pelo **GitHub Pages** e as patch notes se atualizam sozinhas.
+The site stays online through **GitHub Pages** and the patch notes update by themselves.
 
-- **Publicar:** quem cuida disso é o workflow `pages.yml`. Ele manda para o ar só o `index.html` e a pasta `assets/` (os testes e a pasta `tools/` ficam de fora). Roda sempre que algo novo chega na branch `main`.
-- **Atualizar as patch notes:** o workflow `update-patch-notes.yml` roda todo dia. Ele baixa o feed oficial, junta **só as notas mais novas** que a última que já está salva, regera os arquivos `.js` e faz o commit. Se não houver nota nova, não faz nada.
-- Os dois também podem ser rodados na mão: no GitHub, aba **Actions**, escolha o workflow e clique em **Run workflow**.
+- **Publish:** the one that takes care of this is the `pages.yml` workflow. It puts online only the `index.html` and the `assets/` folder (the tests and the `tools/` folder stay out). It runs whenever something new arrives on the `main` branch.
+- **Update the patch notes:** the `update-patch-notes.yml` workflow runs every day. It downloads the official feed, merges **only the newer notes** than the last one already saved, regenerates the `.js` files and commits. If there is no new note, it does nothing.
+- Both can also be run by hand: on GitHub, the **Actions** tab, choose the workflow and click **Run workflow**.
 
-Na primeira vez é preciso ligar a publicação: **Settings → Pages → Source → GitHub Actions**.
+The first time you need to turn on publishing: **Settings → Pages → Source → GitHub Actions**.
 
-### Rodar a atualização de patch notes na mão
+### Running the patch notes update by hand
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\update-patch-notes.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\build-data.ps1
 ```
 
-**Como o buff/nerf é decidido:** o script **não usa inteligência artificial**. Ele vê se o número subiu ou desceu (pelo verbo: *increased*, *reduced*, etc.), confere o que aquilo significa para o atributo (mais munição é bom; mais recuo é ruim) e marca **Buff** ou **Nerf**. Quando não dá para ter certeza, deixa em branco — e o site mostra **Misto**.
+**How buff/nerf is decided:** the script **does not use artificial intelligence**. It sees whether the number went up or down (by the verb: *increased*, *reduced*, etc.), checks what that means for the attribute (more ammo is good; more recoil is bad) and marks **Buff** or **Nerf**. When it can't be sure, it leaves it blank — and the site shows **Mixed**.
 
-## Testar
+## Test
 
-Dê dois cliques no `_selftest.html`. Ele abre o site inteiro, passa por todas as páginas e escreve o resultado no fim da tela.
+Double-click `_selftest.html`. It opens the whole site, goes through all the pages and writes the result at the bottom of the screen.
 
-- Aba do navegador mostrando **SELFTEST-OK** = tudo certo.
-- Mostrando **SELFTEST-FALHOU** = algo quebrou; role até o fim da tela, na parte `FALHAS(n)`, e veja o que foi apontado.
+- Browser tab showing **SELFTEST-OK** = all good.
+- Showing **SELFTEST-FALHOU** = something broke; scroll to the bottom of the screen, in the `FALHAS(n)` part, and see what was pointed out.
 
-Para testar a parte de rankings, abra também o `_selftest-api.html`. Ele carrega um ranking falso de propósito, para conferir que o site sabe trocar os dados quando recebe e manter os dados salvos quando a internet falha.
+To test the rankings part, also open `_selftest-api.html`. It loads a fake ranking on purpose, to check that the site knows how to replace the data when it receives it and to keep the saved data when the internet fails.
 
-## Regras do projeto
+## Project rules
 
-- Interface em português; notícias e patch notes no idioma original da Ubisoft.
-- Sem build, sem dependências, sem servidor. Só HTML, CSS e JavaScript.
-- Os percentuais de uso de peças são **estimativas da comunidade** — a Ubisoft não publica esse número. Isso está avisado no próprio site.
-- Desde o Ranked 3.0 (junho de 2026) não existe MMR público, então o site não mostra esse valor em lugar nenhum.
+- Interface in English; news and patch notes in Ubisoft's original language.
+- No build, no dependencies, no server. Just HTML, CSS and JavaScript.
+- The attachment usage percentages are **community estimates** — Ubisoft does not publish this number. This is warned about on the site itself.
+- Since Ranked 3.0 (June 2026) there is no public MMR, so the site does not show this value anywhere.
