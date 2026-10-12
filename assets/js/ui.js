@@ -84,9 +84,22 @@ window.R6HUB.ui = (function () {
       "</div></a>";
   }
 
+  /* The weapon drawing for cards and the weapon page. The weapon type
+     is written behind the image, so it stays visible if the drawing
+     fails to load (for example a weapon not drawn yet). */
+  function weaponArt(weapon, modifierClass) {
+    return '<span class="w-art' + (modifierClass ? " " + modifierClass : "") + '">' +
+      '<span class="w-art-txt">' + h.escapeHtml(weapon.type) + "</span>" +
+      '<img src="' + h.escapeHtml(h.weaponImage(weapon.name)) + '" alt="' +
+        h.escapeHtml(weapon.name + " drawing") +
+        '" loading="lazy" decoding="async" onerror="this.remove()">' +
+    "</span>";
+  }
+
   /* One weapon inside a grid. */
   function weaponCard(weapon) {
     return '<a class="card w-card" href="#/arma/' + h.encodeKey(weapon.name) + '">' +
+      weaponArt(weapon) +
       '<div class="card-top"><div class="card-title">' +
         '<span class="wc-type">' + h.escapeHtml(weapon.type) + "</span>" +
         '<h3 style="margin-top:2px">' + h.escapeHtml(weapon.name) + "</h3>" +
@@ -122,6 +135,7 @@ window.R6HUB.ui = (function () {
     directionTag: directionTag,
     operatorCard: operatorCard,
     weaponCard: weaponCard,
+    weaponArt: weaponArt,
     operatorChip: operatorChip
   };
 })();

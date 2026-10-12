@@ -490,6 +490,22 @@ select:focus, .filtro-campo:focus { border-color: var(--dourado); outline: none;
   color: var(--atencao);
 }
 
+/* The weapon drawing: a 16:9 banner on top of the card. The weapon
+   type is written in the same grid cell as the image, so it shows
+   through if the drawing is missing (a weapon not drawn yet). */
+.w-art {
+  position: relative; display: grid; place-items: center;
+  aspect-ratio: 16 / 9; overflow: hidden;
+  background: linear-gradient(120deg, #171d25, #0f1319);
+  border-bottom: 1px solid var(--linha-suave);
+}
+.w-art > * { grid-area: 1 / 1; }
+.w-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.w-art-txt {
+  font-family: var(--fonte-titulo); font-weight: 700; font-size: 13px;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--texto-3);
+}
+
 /* =========================================================
    8. SINGLE OPERATOR PAGE
    ========================================================= */
@@ -503,6 +519,10 @@ select:focus, .filtro-campo:focus { border-color: var(--dourado); outline: none;
 .detail-hero.def { border-left-color: var(--defensor); }
 .detail-hero .avatar { width: 92px; height: 92px; font-size: 40px; }
 .detail-hero h1 { font-size: clamp(28px, 4vw, 44px); }
+
+/* The weapon page uses the drawing as a full-width banner on top. */
+.detail-hero.detail-weapon { grid-template-columns: 1fr; }
+.detail-hero.detail-weapon .w-art { border: 1px solid var(--linha); border-radius: var(--canto-m); }
 
 .badges { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0 14px; }
 .badge {

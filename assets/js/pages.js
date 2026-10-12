@@ -420,8 +420,8 @@ window.R6HUB.pages = (function () {
       { text: weapon.name }
     ]);
 
-    html += '<section class="detail-hero" style="border-left-color:var(--dourado)">' +
-      '<div class="avatar">' + esc(h.initials(weapon.name)) + "</div>" +
+    html += '<section class="detail-hero detail-weapon" style="border-left-color:var(--dourado)">' +
+      ui.weaponArt(weapon, "hero") +
       "<div>" +
         '<span class="eyebrow">' + esc(weapon.type) + "</span>" +
         "<h1>" + esc(weapon.name) + "</h1>" +

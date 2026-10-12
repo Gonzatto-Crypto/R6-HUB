@@ -45,10 +45,13 @@ assets/js/data/news.js        the news             (generated, do not edit)
 
 assets/img/operators/         one SVG drawing per Operator
 assets/img/operators/LEIA-ME.md  where the drawings came from and their license
+assets/img/weapons/           one SVG drawing per weapon
+assets/img/weapons/README.md  where the weapon drawings came from and their license
 
 data/patchnotes.json          the source of the balance changes
 data/news.json                the source of the news
 tools/build-data.ps1          script that regenerates the two "generated" files
+tools/build-weapon-images.ps1 script that (re)draws the weapon images
 tools/update-patch-notes.ps1  script that downloads and merges the new patch notes
 
 .github/workflows/pages.yml               publishes the site on GitHub Pages

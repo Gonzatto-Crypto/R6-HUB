@@ -124,8 +124,8 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
     ["#/armas", ".grid-weapons .card", 30000],
     ["#/armas?type=LMG", ".grid-weapons", 3000],
     ["#/armas?q=m4", ".grid-weapons", 1000],
-    ["#/arma/M249%20SAW", ".detail-hero", 1000],
-    ["#/arma/SMG-11", ".detail-hero", 1000],
+    ["#/arma/M249%20SAW", ".detail-hero.detail-weapon .w-art.hero img", 1000],
+    ["#/arma/SMG-11", ".detail-hero.detail-weapon .w-art.hero img", 1000],
     ["#/arma/arma-que-nao-existe", ".empty-state", 50],
     ["#/noticias", ".news-list .news-card", 10000],
     ["#/noticias?cat=esports", ".news-card", 1000],
@@ -308,8 +308,10 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
             s.dispatchEvent(new Event("change", { bubbles: true }));
             setTimeout(function () {
               var n3 = document.querySelectorAll(".grid-weapons .card").length;
-              log("[filtros] armas SNIPER = " + n3);
+              var imgs = document.querySelectorAll(".grid-weapons .w-card .w-art img").length;
+              log("[filtros] armas SNIPER = " + n3 + ", desenhos = " + imgs);
               if (n3 === 0 || n3 > 10) fail("filtro de tipo de arma suspeito: " + n3);
+              if (imgs !== n3) fail("cards de arma sem desenho: " + imgs + " de " + n3);
               navStep();
             }, 120);
           });

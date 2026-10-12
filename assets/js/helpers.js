@@ -69,13 +69,23 @@ window.R6HUB.helpers = (function () {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
-  /* Path to an operator's SVG drawing. "Tachanka" -> ".../tachanka.svg" */
-  function operatorImage(name) {
-    return "assets/img/operators/" + String(name || "")
+  /* "Tachanka" -> "tachanka", "Nøkk" -> "n-kk". Used for image files. */
+  function slug(name) {
+    return String(name == null ? "" : name)
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") + ".svg";
+      .replace(/^-+|-+$/g, "");
+  }
+
+  /* Path to an operator's SVG drawing. "Tachanka" -> ".../tachanka.svg" */
+  function operatorImage(name) {
+    return "assets/img/operators/" + slug(name) + ".svg";
+  }
+
+  /* Path to a weapon's SVG drawing. "M249 SAW" -> ".../m249-saw.svg" */
+  function weaponImage(name) {
+    return "assets/img/weapons/" + slug(name) + ".svg";
   }
 
   /* "2026-09-22" -> "22 Sep 2026" */
@@ -193,7 +203,9 @@ window.R6HUB.helpers = (function () {
     escapeHtml: escapeHtml,
     normalize: normalize,
     initials: initials,
+    slug: slug,
     operatorImage: operatorImage,
+    weaponImage: weaponImage,
     formatDate: formatDate,
     dots: dots,
     encodeKey: encodeKey,
