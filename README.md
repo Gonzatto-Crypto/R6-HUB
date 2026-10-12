@@ -14,12 +14,13 @@ You need a current browser (Edge, Chrome, Firefox or Safari). It works without i
 
 | Page | What it shows |
 | --- | --- |
-| Home | Current season, highlights, latest news and the teams at the top |
+| Home | Current season, the key numbers and the latest news |
 | Operators | The 78 Operators, with a filter by side, role, CTU, health, speed and year |
 | Weapons | The 116 weapons, with damage, rate of fire, magazine and the most used attachments |
 | News | Game news with a filter by category |
 | Balance | The official patch notes, with what was buffed or nerfed |
 | Rankings | Professional teams and the most decorated individual players |
+| Tier List | The strongest operators, in tiers, with a filter for attackers or defenders |
 
 ## Where things are
 
@@ -31,10 +32,14 @@ _selftest-api.html            automated test for the rankings part
 
 assets/css/styles.css         the colors and the visual
 assets/js/config.js           what can be changed without touching the code
-assets/js/app.js              the site itself: shows the pages and handles clicks
+assets/js/helpers.js          small pure functions (text, dates, URL)
+assets/js/ui.js               reusable pieces of screen (cards, badges)
+assets/js/pages.js            one function per page (builds the HTML)
+assets/js/app.js              the router: picks the page, wires the clicks
 assets/js/data/operators.js   the list of Operators
 assets/js/data/weapons.js     the list of weapons
 assets/js/data/rankings.js    the list of teams and players
+assets/js/data/tiers.js       the operator tier list (S/A/B/C)
 assets/js/data/patchnotes.js  the balance changes  (generated, do not edit)
 assets/js/data/news.js        the news             (generated, do not edit)
 

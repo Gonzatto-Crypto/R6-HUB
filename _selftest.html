@@ -38,8 +38,12 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
 <script src="assets/js/data/operators.js"></script>
 <script src="assets/js/data/weapons.js"></script>
 <script src="assets/js/data/rankings.js"></script>
+<script src="assets/js/data/tiers.js"></script>
 <script src="assets/js/data/patchnotes.js"></script>
 <script src="assets/js/data/news.js"></script>
+<script src="assets/js/helpers.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/pages.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
 (function () {
@@ -86,11 +90,25 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
   D.rankings.teamsMore.forEach(function (t) {
     if (t.siPoints !== undefined) fail("teamsMore ainda usa siPoints (deveria ser siPosition): " + t.name);
   });
+  if (!D.tiers || !D.tiers.tiers) fail("D.tiers nao carregou");
+  else {
+    var tierIds = {}, tierTotal = 0;
+    D.tiers.tiers.forEach(function (tier) {
+      tier.operators.forEach(function (id) {
+        tierTotal++;
+        if (tierIds[id]) fail("id repetido na tier list: " + id);
+        tierIds[id] = 1;
+        if (!D.operators.some(function (o) { return o.id === id; })) fail("id de tier inexistente: " + id);
+      });
+    });
+    log("[dados] tier list: " + D.tiers.tiers.length + " tiers, " + tierTotal + " ids");
+    if (tierTotal !== D.operators.length) fail("tier list cobre " + tierTotal + " de " + D.operators.length + " operadores");
+  }
   if (!bad.length) log("[dados] integridade OK (campos, gadgets, referencias de armas, sem duplicados)");
 
   /* ---------- 2. render de cada rota ---------- */
   var routes = [
-    ["#/", ".hero", 5000],
+    ["#/", ".hero", 3000],
     ["#/agentes", ".grid-ops .card", 20000],
     ["#/agentes?side=ATK", ".grid-ops", 20000],
     ["#/agentes?side=DEF&speed=1&health=125", ".grid-ops", 2000],
@@ -115,6 +133,9 @@ console.error = function () { window.__js.push("console.error: " + [].join.call(
     ["#/noticias?tab=balanceamentos", ".patch", 8000],
     ["#/rankings", ".team-cell", 10000],
     ["#/rankings?tab=solo", ".mmr-na", 3000],
+    ["#/tiers", ".tier-row .tier-op", 1500],
+    ["#/tiers?tab=atk", ".tier-op.atk", 800],
+    ["#/tiers?tab=def", ".tier-op.def", 800],
     ["#/rota-inexistente", ".empty-state", 50]
   ];
   var i = 0, jsBefore = 0;
