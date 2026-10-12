@@ -40,11 +40,11 @@ window.R6HUB.pages = (function () {
         '<span class="eyebrow">Community hub &middot; data from ' + esc(h.formatDate(CONFIG.snapshot)) + "</span>" +
         "<h1>Rainbow Six <span>Siege</span> all in one place</h1>" +
         '<p class="lead">All ' + D.operators.length + " operators with their gadgets, abilities and weapons, " +
-        "the attachment meta, the official patch notes, news, rankings and a tier list of the best operators. " +
+        "the attachment meta, the official patch notes, news, rankings and the meta of the best operators. " +
         "Pick a section below to start.</p>" +
         '<div class="hero-acoes">' +
           '<a class="btn btn-primary" href="#/agentes">Explore the ' + D.operators.length + " operators</a>" +
-          '<a class="btn" href="#/tiers">Operator tier list</a>' +
+          '<a class="btn" href="#/tiers">Operator meta</a>' +
         "</div>" +
       "</div>" +
       '<div class="season-card">' +
@@ -72,7 +72,7 @@ window.R6HUB.pages = (function () {
       tile("#/armas", "Weapons", D.weapons.length + " weapons with stats and the attachment meta") +
       tile("#/noticias", "News &amp; Balance", "Official patch notes and the latest game news") +
       tile("#/rankings", "Rankings", "Pro teams and the most decorated players") +
-      tile("#/tiers", "Tier List", "The best operators, by community and pro play") +
+      tile("#/tiers", "Meta", "The best operators, by community and pro play") +
     "</div>";
 
     html += ui.sectionHead("News", "Latest news", "", '<a class="btn" href="#/noticias">View all</a>');
@@ -727,9 +727,9 @@ window.R6HUB.pages = (function () {
     var side = filters.tab === "atk" ? "ATK" : filters.tab === "def" ? "DEF" : "";
 
     var html = "";
-    html += ui.sectionHead("Tier list", "Best operators right now",
-      "Community consensus and performance in professional play, in one tier list.");
-    html += ui.breadcrumbs([{ text: "Home", link: "#/" }, { text: "Tier List" }]);
+    html += ui.sectionHead("Meta", "Best operators right now",
+      "Community consensus and performance in professional play, in one place.");
+    html += ui.breadcrumbs([{ text: "Home", link: "#/" }, { text: "Meta" }]);
 
     html += ui.notice("<b>Opinion-based guide:</b> " + esc(D.tiers.intro) +
       " Reference date: " + esc(h.formatDate(D.tiers.updated)) + ".", "info");

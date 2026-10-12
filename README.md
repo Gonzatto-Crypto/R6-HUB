@@ -20,7 +20,7 @@ You need a current browser (Edge, Chrome, Firefox or Safari). It works without i
 | News | Game news with a filter by category |
 | Balance | The official patch notes, with what was buffed or nerfed |
 | Rankings | Professional teams and the most decorated individual players |
-| Tier List | The strongest operators, in tiers, with a filter for attackers or defenders |
+| Meta | The strongest operators, in tiers, with a filter for attackers or defenders |
 
 ## Where things are
 
@@ -39,7 +39,7 @@ assets/js/app.js              the router: picks the page, wires the clicks
 assets/js/data/operators.js   the list of Operators
 assets/js/data/weapons.js     the list of weapons
 assets/js/data/rankings.js    the list of teams and players
-assets/js/data/tiers.js       the operator tier list (S/A/B/C)
+assets/js/data/tiers.js       the operator meta (S/A/B/C)
 assets/js/data/patchnotes.js  the balance changes  (generated, do not edit)
 assets/js/data/news.js        the news             (generated, do not edit)
 
